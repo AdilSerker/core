@@ -180,125 +180,9 @@ struct Character
 		fclose(f);
 	}
 
-	void update(Heightmap *heightmap)
-	{
-		trajectory->rotation();
-
-		for (int i = Trajectory::LENGTH / 2; i < Trajectory::LENGTH; i++)
-		{
-			trajectory->positions[i].y = heightmap->sample(glm::vec2(trajectory->positions[i].x, trajectory->positions[i].z));
-		}
-
-		trajectory->heights[Trajectory::LENGTH / 2] = 0.0;
-		for (int i = 0; i < Trajectory::LENGTH; i += 10)
-		{
-			trajectory->heights[Trajectory::LENGTH / 2] += (trajectory->positions[i].y / ((Trajectory::LENGTH) / 10));
-		}
-
-		root_position = glm::vec3(
-			trajectory->positions[Trajectory::LENGTH / 2].x,
-			trajectory->heights[Trajectory::LENGTH / 2],
-			trajectory->positions[Trajectory::LENGTH / 2].z);
-
-		root_rotation = trajectory->rotations[Trajectory::LENGTH / 2];
-
-		for (int i = 0; i < Trajectory::LENGTH; i += 10)
-		{
-			int w = (Trajectory::LENGTH) / 10;
-			int o = Trajectory::LENGTH + JOINT_NUM * 3 * 2;
-
-			glm::vec3 pos = glm::inverse(root_rotation) * (trajectory->positions[i] - root_position);
-			glm::vec3 dir = glm::inverse(root_rotation) * trajectory->directions[i];
-
-			trajectory->input_position(pos, w, i);
-			trajectory->input_direction(dir, w, i);
-
-			trajectory->input_gaits(w, i);
-
-			glm::vec3 position_r = trajectory->positions[i] + (trajectory->rotations[i] * glm::vec3(trajectory->width, 0, 0));
-			glm::vec3 position_l = trajectory->positions[i] + (trajectory->rotations[i] * glm::vec3(-trajectory->width, 0, 0));
-
-			float R = heightmap->sample(glm::vec2(position_r.x, position_r.z));
-			float L = heightmap->sample(glm::vec2(position_l.x, position_l.z));
-
-			trajectory->input_heights(
-				root_position,
-				R, L,
-				o, w, i);
-		}
-
-		glm::vec3 prev_root_position = glm::vec3(
-			trajectory->positions[Trajectory::LENGTH / 2 - 1].x,
-			trajectory->heights[Trajectory::LENGTH / 2 - 1],
-			trajectory->positions[Trajectory::LENGTH / 2 - 1].z);
-
-		glm::mat3 prev_root_rotation = trajectory->rotations[Trajectory::LENGTH / 2 - 1];
-
-		for (int i = 0; i < JOINT_NUM; i++)
-		{
-			glm::vec3 position = glm::inverse(prev_root_rotation) * (joint_positions[i] - prev_root_position);
-			glm::vec3 previous = glm::inverse(prev_root_rotation) * joint_velocities[i];
-			trajectory->input_previous_state(position, previous, i, JOINT_NUM);
-		}
-	}
-
-	void post_update_trajectory(Areas *areas)
-	{
-		trajectory->update_past();
-
-		float stand_amount = trajectory->get_stand_amount();
-
-		trajectory->update_current(stand_amount);
-
-		check_collide(areas);
-
-		trajectory->update_future();
-		phase = fmod(phase + (stand_amount * 0.9f + 0.1f) * 2 * M_PI * trajectory->pfnn->Yp(3), 2 * M_PI);
-	}
-
-	void build_local_transform()
-	{
-
-		for (int i = 0; i < JOINT_NUM; i++)
-		{
-			int opos = 8 + (((Trajectory::LENGTH / 2) / 10) * 4) + (JOINT_NUM * 3 * 0);
-			int ovel = 8 + (((Trajectory::LENGTH / 2) / 10) * 4) + (JOINT_NUM * 3 * 1);
-			int orot = 8 + (((Trajectory::LENGTH / 2) / 10) * 4) + (JOINT_NUM * 3 * 2);
-
-			glm::vec3 pos = (root_rotation * trajectory->getPosition(opos, i)) + root_position;
-			glm::vec3 vel = (root_rotation * trajectory->getVelocity(ovel, i));
-			glm::mat3 rot = (root_rotation * glm::toMat3(quat_exp(trajectory->getRotation(orot, i))));
-
-			joint_positions[i] = glm::mix(joint_positions[i] + vel, pos, options->extra_joint_smooth);
-			joint_velocities[i] = vel;
-			joint_rotations[i] = rot;
-
-			joint_global_anim_xform[i] = glm::transpose(glm::mat4(
-				rot[0][0], rot[1][0], rot[2][0], pos[0],
-				rot[0][1], rot[1][1], rot[2][1], pos[1],
-				rot[0][2], rot[1][2], rot[2][2], pos[2],
-				0, 0, 0, 1));
-
-			if (i == 0)
-			{
-				joint_anim_xform[i] = joint_global_anim_xform[i];
-			}
-			else
-			{
-				joint_anim_xform[i] = glm::inverse(joint_global_anim_xform[joint_parents[i]]) * joint_global_anim_xform[i];
-			}
-		}
-
-		forward_kinematics();
-	}
 
 	void update_move(int x_vel, int y_vel, glm::vec3 cam_direct, int vel, int strafe)
 	{
-		if (abs(x_vel) + abs(y_vel) < 10000)
-		{
-			x_vel = 0;
-			y_vel = 0;
-		};
 
 		glm::vec3 trajectory_target_direction_new = glm::normalize(glm::vec3(cam_direct.x, 0.0, cam_direct.z));
 		glm::mat3 trajectory_target_rotation = glm::mat3(glm::rotate(atan2f(
@@ -323,7 +207,7 @@ struct Character
 		trajectory->update_gait(vel, crouched_amount, options->extra_gait_smooth);
 	}
 
-	void forecast(Areas *areas)
+void forecast(Areas *areas)
 	{
 		forecast_trajectory(areas);
 		forecast_jump(areas);
@@ -430,9 +314,110 @@ struct Character
 		}
 	}
 
+
+	void update(Heightmap *heightmap)
+	{
+		trajectory->rotation();
+
+		for (int i = Trajectory::LENGTH / 2; i < Trajectory::LENGTH; i++)
+		{
+			trajectory->positions[i].y = heightmap->sample(glm::vec2(trajectory->positions[i].x, trajectory->positions[i].z));
+		}
+
+		trajectory->heights[Trajectory::LENGTH / 2] = 0.0;
+		for (int i = 0; i < Trajectory::LENGTH; i += 10)
+		{
+			trajectory->heights[Trajectory::LENGTH / 2] += (trajectory->positions[i].y / ((Trajectory::LENGTH) / 10));
+		}
+
+		root_position = glm::vec3(
+			trajectory->positions[Trajectory::LENGTH / 2].x,
+			trajectory->heights[Trajectory::LENGTH / 2],
+			trajectory->positions[Trajectory::LENGTH / 2].z);
+
+		root_rotation = trajectory->rotations[Trajectory::LENGTH / 2];
+
+		for (int i = 0; i < Trajectory::LENGTH; i += 10)
+		{
+			int w = (Trajectory::LENGTH) / 10;
+			int o = Trajectory::LENGTH + JOINT_NUM * 3 * 2;
+
+			glm::vec3 pos = glm::inverse(root_rotation) * (trajectory->positions[i] - root_position);
+			glm::vec3 dir = glm::inverse(root_rotation) * trajectory->directions[i];
+
+			trajectory->input_position(pos, w, i);
+			trajectory->input_direction(dir, w, i);
+
+			trajectory->input_gaits(w, i);
+
+			glm::vec3 position_r = trajectory->positions[i] + (trajectory->rotations[i] * glm::vec3(trajectory->width, 0, 0));
+			glm::vec3 position_l = trajectory->positions[i] + (trajectory->rotations[i] * glm::vec3(-trajectory->width, 0, 0));
+
+			float R = heightmap->sample(glm::vec2(position_r.x, position_r.z));
+			float L = heightmap->sample(glm::vec2(position_l.x, position_l.z));
+
+			trajectory->input_heights(
+				root_position,
+				R, L,
+				o, w, i);
+		}
+
+		glm::vec3 prev_root_position = glm::vec3(
+			trajectory->positions[Trajectory::LENGTH / 2 - 1].x,
+			trajectory->heights[Trajectory::LENGTH / 2 - 1],
+			trajectory->positions[Trajectory::LENGTH / 2 - 1].z);
+
+		glm::mat3 prev_root_rotation = trajectory->rotations[Trajectory::LENGTH / 2 - 1];
+
+		for (int i = 0; i < JOINT_NUM; i++)
+		{
+			glm::vec3 position = glm::inverse(prev_root_rotation) * (joint_positions[i] - prev_root_position);
+			glm::vec3 previous = glm::inverse(prev_root_rotation) * joint_velocities[i];
+			trajectory->input_previous_state(position, previous, i, JOINT_NUM);
+		}
+	}
+
+		
 	void predict_pfnn()
 	{
 		trajectory->pfnn->predict(phase);
+	}
+
+
+	void build_local_transform()
+	{
+
+		for (int i = 0; i < JOINT_NUM; i++)
+		{
+			int opos = 8 + (((Trajectory::LENGTH / 2) / 10) * 4) + (JOINT_NUM * 3 * 0);
+			int ovel = 8 + (((Trajectory::LENGTH / 2) / 10) * 4) + (JOINT_NUM * 3 * 1);
+			int orot = 8 + (((Trajectory::LENGTH / 2) / 10) * 4) + (JOINT_NUM * 3 * 2);
+
+			glm::vec3 pos = (root_rotation * trajectory->getPosition(opos, i)) + root_position;
+			glm::vec3 vel = (root_rotation * trajectory->getVelocity(ovel, i));
+			glm::mat3 rot = (root_rotation * glm::toMat3(quat_exp(trajectory->getRotation(orot, i))));
+
+			joint_positions[i] = glm::mix(joint_positions[i] + vel, pos, options->extra_joint_smooth);
+			joint_velocities[i] = vel;
+			joint_rotations[i] = rot;
+
+			joint_global_anim_xform[i] = glm::transpose(glm::mat4(
+				rot[0][0], rot[1][0], rot[2][0], pos[0],
+				rot[0][1], rot[1][1], rot[2][1], pos[1],
+				rot[0][2], rot[1][2], rot[2][2], pos[2],
+				0, 0, 0, 1));
+
+			if (i == 0)
+			{
+				joint_anim_xform[i] = joint_global_anim_xform[i];
+			}
+			else
+			{
+				joint_anim_xform[i] = glm::inverse(joint_global_anim_xform[joint_parents[i]]) * joint_global_anim_xform[i];
+			}
+		}
+
+		forward_kinematics();
 	}
 
 	void forward_kinematics()
@@ -671,6 +656,21 @@ struct Character
 		}
 	}
 
+	void post_update_trajectory(Areas *areas)
+	{
+		trajectory->update_past();
+
+		float stand_amount = trajectory->get_stand_amount();
+
+		trajectory->update_current(stand_amount);
+
+		check_collide(areas);
+
+		trajectory->update_future();
+		phase = fmod(phase + (stand_amount * 0.9f + 0.1f) * 2 * M_PI * trajectory->pfnn->Yp(3), 2 * M_PI);
+	}
+
+
 	void check_collide(Areas *areas)
 	{
 		for (int j = 0; j < areas->num_walls(); j++)
@@ -688,4 +688,7 @@ struct Character
 			}
 		}
 	}
+
+
+
 };
