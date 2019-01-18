@@ -8,7 +8,7 @@
 
 #include <fstream>
 
-#include "helpers.cpp"
+// #include "helpers.cpp"
 
 #include "Trajectory.cpp"
 #include "CharacterOptions.cpp"
@@ -183,28 +183,9 @@ struct Character
 
 	void update_move(int x_vel, int y_vel, glm::vec3 cam_direct, int vel, int strafe)
 	{
-
-		glm::vec3 trajectory_target_direction_new = glm::normalize(glm::vec3(cam_direct.x, 0.0, cam_direct.z));
-		glm::mat3 trajectory_target_rotation = glm::mat3(glm::rotate(atan2f(
-																		 trajectory_target_direction_new.x,
-																		 trajectory_target_direction_new.z),
-																	 glm::vec3(0, 1, 0)));
-
-		float target_vel_speed = 2.5 + 2.5 * ((vel / 32768.0) + 1.0);
-
-		glm::vec3 trajectory_target_velocity_new = target_vel_speed * (trajectory_target_rotation * glm::vec3(x_vel / 32768.0, 0, y_vel / 32768.0));
-		trajectory->target_vel = glm::mix(trajectory->target_vel, trajectory_target_velocity_new, options->extra_velocity_smooth);
-
-		strafe_target = ((strafe / 32768.0) + 1.0) / 2.0;
-		strafe_amount = glm::mix(strafe_amount, strafe_target, options->extra_strafe_smooth);
-
-		glm::vec3 trajectory_target_velocity_dir = glm::length(trajectory->target_vel) < 1e-05 ? trajectory->target_dir : glm::normalize(trajectory->target_vel);
-		trajectory_target_direction_new = mix_directions(trajectory_target_velocity_dir, trajectory_target_direction_new, strafe_amount);
-		trajectory->target_dir = mix_directions(trajectory->target_dir, trajectory_target_direction_new, options->extra_direction_smooth);
-
-		crouched_amount = glm::mix(crouched_amount, crouched_target, options->extra_crouched_smooth);
-
-		trajectory->update_gait(vel, crouched_amount, options->extra_gait_smooth);
+		trajectory->input_controller(x_vel, y_vel, cam_direct, vel, strafe,
+			&strafe_target, &strafe_amount, &crouched_target, &crouched_amount);
+		
 	}
 
 void forecast(Areas *areas)

@@ -2,7 +2,6 @@
 #define HEIGHTMAP_H
 
 #include <GL/glew.h>
-// #include <SDL2/SDL.h>
 #include <eigen3/Eigen/Dense>
 #include <glm/glm.hpp>
 #include <fstream>

@@ -1,6 +1,5 @@
 #include "PFNN.h"
 
-#include <SDL2/SDL.h>
 using namespace Eigen;
 
 

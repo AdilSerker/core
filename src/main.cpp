@@ -64,19 +64,19 @@ static void pre_render()
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		y_vel += 32768;
+		y_vel += 25000;
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		x_vel += 32768;
+		x_vel += 25000;
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		y_vel -= 32768;
+		y_vel -= 25000;
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		x_vel -= 32768;
+		x_vel -= 25000;
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{

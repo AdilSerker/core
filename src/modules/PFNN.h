@@ -1,6 +1,8 @@
 #ifndef PFNN_H
 #define PFNN_H
 
+#include <stdio.h>
+#include <stdarg.h>
 #include <eigen3/Eigen/Dense>
 #include <iostream>
 #include <vector>
