@@ -92,19 +92,6 @@ static void pre_render()
 
 	character->update_move(direction_velocity, camera->direction(), vel, strafe, is_crouched);
 
-	character->forecast(areas);
-
-	character->update(heightmap);
-
-	/* Perform Regression */
-
-	character->predict_pfnn();
-
-	character->build_local_transform();
-
-	character->set_ik(heightmap);
-	
-	character->post_update_trajectory(areas);
 }
 
 void render()
@@ -219,43 +206,6 @@ void render()
 	glDisable(GL_CULL_FACE);
 }
 
-
-void load_world4(void) {
-  
-        printf("Loading World 4\n");
-        
-        heightmap->load("./heightmaps/hmap_013_smooth.txt", 1.0);
-        
-        areas->clear();
-        areas->add_wall(glm::vec2( 1225, -1000), glm::vec2( 1225, 1000), 20);
-        areas->add_wall(glm::vec2( 1225,  1000), glm::vec2(-1225, 1000), 20);
-        areas->add_wall(glm::vec2(-1225,  1000), glm::vec2(-1225,-1000), 20);
-        areas->add_wall(glm::vec2(-1225, -1000), glm::vec2( 1225,-1000), 20);
-        
-        areas->add_jump(glm::vec3( 237.64, 5,  452.98), 75, 100);
-        areas->add_jump(glm::vec3( 378.40, 5,  679.64), 75, 100);
-        areas->add_jump(glm::vec3( 227.17, 5,  866.28), 75, 100);
-        areas->add_jump(glm::vec3( -43.93, 5,  609.78), 75, 100);
-        areas->add_jump(glm::vec3( 810.12, 5,  897.37), 75, 100);
-        areas->add_jump(glm::vec3( 945.85, 5,  493.90), 75, 100);
-        areas->add_jump(glm::vec3( 618.69, 5,  220.01), 75, 100);
-        areas->add_jump(glm::vec3( 950.29, 5,  246.37), 75, 100);
-        areas->add_jump(glm::vec3( 703.68, 5, -262.97), 75, 100);
-        areas->add_jump(glm::vec3( 798.17, 5, -579.91), 75, 100);
-        areas->add_jump(glm::vec3(1137.51, 5, -636.69), 75, 100);
-        areas->add_jump(glm::vec3( 212.80, 5, -638.25), 75, 100);
-        areas->add_jump(glm::vec3(  79.65, 5, -909.37), 75, 100);
-        areas->add_jump(glm::vec3(-286.95, 5, -771.64), 75, 100);
-        areas->add_jump(glm::vec3(-994.98, 5, -547.12), 75, 100);
-        areas->add_jump(glm::vec3(-384.53, 5,  245.73), 75, 100);
-        areas->add_jump(glm::vec3(-559.39, 5,  672.81), 75, 100);
-        areas->add_jump(glm::vec3(-701.95, 5,  902.13), 75, 100);
-
-        character->reset_position(glm::vec2(300, 0), heightmap);
-
-    }
-
-
 int gl_init()
 {
 
@@ -330,7 +280,36 @@ int main(void)
 	heightmap = new Heightmap();
 	areas = new Areas();
 	
-	load_world4();
+	printf("Loading World 4\n");
+	
+	heightmap->load("./heightmaps/hmap_013_smooth.txt", 1.0);
+	
+	areas->clear();
+	areas->add_wall(glm::vec2( 1225, -1000), glm::vec2( 1225, 1000), 20);
+	areas->add_wall(glm::vec2( 1225,  1000), glm::vec2(-1225, 1000), 20);
+	areas->add_wall(glm::vec2(-1225,  1000), glm::vec2(-1225,-1000), 20);
+	areas->add_wall(glm::vec2(-1225, -1000), glm::vec2( 1225,-1000), 20);
+	
+	areas->add_jump(glm::vec3( 237.64, 5,  452.98), 75, 100);
+	areas->add_jump(glm::vec3( 378.40, 5,  679.64), 75, 100);
+	areas->add_jump(glm::vec3( 227.17, 5,  866.28), 75, 100);
+	areas->add_jump(glm::vec3( -43.93, 5,  609.78), 75, 100);
+	areas->add_jump(glm::vec3( 810.12, 5,  897.37), 75, 100);
+	areas->add_jump(glm::vec3( 945.85, 5,  493.90), 75, 100);
+	areas->add_jump(glm::vec3( 618.69, 5,  220.01), 75, 100);
+	areas->add_jump(glm::vec3( 950.29, 5,  246.37), 75, 100);
+	areas->add_jump(glm::vec3( 703.68, 5, -262.97), 75, 100);
+	areas->add_jump(glm::vec3( 798.17, 5, -579.91), 75, 100);
+	areas->add_jump(glm::vec3(1137.51, 5, -636.69), 75, 100);
+	areas->add_jump(glm::vec3( 212.80, 5, -638.25), 75, 100);
+	areas->add_jump(glm::vec3(  79.65, 5, -909.37), 75, 100);
+	areas->add_jump(glm::vec3(-286.95, 5, -771.64), 75, 100);
+	areas->add_jump(glm::vec3(-994.98, 5, -547.12), 75, 100);
+	areas->add_jump(glm::vec3(-384.53, 5,  245.73), 75, 100);
+	areas->add_jump(glm::vec3(-559.39, 5,  672.81), 75, 100);
+	areas->add_jump(glm::vec3(-701.95, 5,  902.13), 75, 100);
+
+	character->reset_position(glm::vec2(300, 0), heightmap, areas);
 
 	double lastTime = glfwGetTime();
 	int nbFrames = 0;
@@ -349,15 +328,9 @@ int main(void)
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		render();
-
 		pre_render();
 
-		if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
-		{
-			// autogenerate_location();
-		}
-
+		render();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

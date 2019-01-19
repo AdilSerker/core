@@ -10,12 +10,14 @@
 
 // #include "helpers.cpp"
 
-#include "Trajectory.cpp"
+#include "Trajectory.h"
 #include "CharacterOptions.cpp"
 #include "IK.cpp"
 
 #include "Heightmap.h"
 #include "Areas.h"
+
+using namespace std;
 
 struct Character
 {
@@ -96,14 +98,14 @@ struct Character
 
 	glm::vec3 getPosition()
 	{
-		return glm::vec3(
-			trajectory->positions[Trajectory::LENGTH / 2].x,
-			trajectory->heights[Trajectory::LENGTH / 2] + 100,
-			trajectory->positions[Trajectory::LENGTH / 2].z);
+		return trajectory->get_center_position();
 	}
 
-	void reset_position(glm::vec2 position, Heightmap *heightmap)
+	void reset_position(glm::vec2 position, Heightmap *heightmap, Areas *areas)
 	{
+		this->heightmap = heightmap;
+		this->areas = areas;
+
 		ArrayXf Yp = trajectory->pfnn->getYmean();
 
 		glm::vec3 root_position = glm::vec3(position.x, heightmap->sample(position), position.y);
@@ -215,188 +217,20 @@ struct Character
 
 		crouched_amount = glm::mix(crouched_amount, crouched_target, options->extra_crouched_smooth);
 		trajectory->update_gait(vel, crouched_amount, options->extra_gait_smooth);
-	}
+		trajectory->predict(responsive, strafe_amount, areas);
 
-void forecast(Areas *areas)
-	{
-		forecast_trajectory(areas);
-		forecast_jump(areas);
-		forecast_crouch(areas);
-		forecast_wall(areas);
-	}
-
-	void forecast_trajectory(Areas *areas)
-	{
-		glm::vec3 trajectory_positions_blend[Trajectory::LENGTH];
-		trajectory_positions_blend[Trajectory::LENGTH / 2] = trajectory->positions[Trajectory::LENGTH / 2];
-
-		for (int i = Trajectory::LENGTH / 2 + 1; i < Trajectory::LENGTH; i++)
-		{
-
-			float bias_pos = responsive ? glm::mix(2.0f, 2.0f, strafe_amount) : glm::mix(0.5f, 1.0f, strafe_amount);
-			float bias_dir = responsive ? glm::mix(5.0f, 3.0f, strafe_amount) : glm::mix(2.0f, 0.5f, strafe_amount);
-
-			float scale_pos = (1.0f - powf(1.0f - ((float)(i - Trajectory::LENGTH / 2) / (Trajectory::LENGTH / 2)), bias_pos));
-			float scale_dir = (1.0f - powf(1.0f - ((float)(i - Trajectory::LENGTH / 2) / (Trajectory::LENGTH / 2)), bias_dir));
-
-			trajectory_positions_blend[i] = trajectory_positions_blend[i - 1] + glm::mix(
-																					trajectory->positions[i] - trajectory->positions[i - 1],
-																					trajectory->target_vel,
-																					scale_pos);
-
-			/* Collide with walls */
-			for (int j = 0; j < areas->num_walls(); j++)
-			{
-				glm::vec2 trjpoint = glm::vec2(trajectory_positions_blend[i].x, trajectory_positions_blend[i].z);
-				if (glm::length(trjpoint - ((areas->wall_start[j] + areas->wall_stop[j]) / 2.0f)) >
-					glm::length(areas->wall_start[j] - areas->wall_stop[j]))
-				{
-					continue;
-				}
-				glm::vec2 segpoint = segment_nearest(areas->wall_start[j], areas->wall_stop[j], trjpoint);
-				float segdist = glm::length(segpoint - trjpoint);
-				if (segdist < areas->wall_width[j] + 100.0)
-				{
-					glm::vec2 prjpoint0 = (areas->wall_width[j] + 0.0f) * glm::normalize(trjpoint - segpoint) + segpoint;
-					glm::vec2 prjpoint1 = (areas->wall_width[j] + 100.0f) * glm::normalize(trjpoint - segpoint) + segpoint;
-					glm::vec2 prjpoint = glm::mix(prjpoint0, prjpoint1, glm::clamp((segdist - areas->wall_width[j]) / 100.0f, 0.0f, 1.0f));
-					trajectory_positions_blend[i].x = prjpoint.x;
-					trajectory_positions_blend[i].z = prjpoint.y;
-				}
-			}
-
-			trajectory->directions[i] = mix_directions(trajectory->directions[i], trajectory->target_dir, scale_dir);
-
-			trajectory->predict(i);
-		}
-
-		for (int i = Trajectory::LENGTH / 2 + 1; i < Trajectory::LENGTH; i++)
-		{
-			trajectory->positions[i] = trajectory_positions_blend[i];
-		}
-	}
-
-	void forecast_jump(Areas *areas)
-	{
-		for (int i = Trajectory::LENGTH / 2; i < Trajectory::LENGTH; i++)
-		{
-			trajectory->gait_jump[i] = 0.0;
-			for (int j = 0; j < areas->num_jumps(); j++)
-			{
-				float dist = glm::length(trajectory->positions[i] - areas->jump_pos[j]);
-				trajectory->gait_jump[i] = std::max(trajectory->gait_jump[i],
-													1.0f - glm::clamp((dist - areas->jump_size[j]) / areas->jump_falloff[j], 0.0f, 1.0f));
-			}
-		}
-	}
-
-	void forecast_crouch(Areas *areas)
-	{
-		for (int i = Trajectory::LENGTH / 2; i < Trajectory::LENGTH; i++)
-		{
-			for (int j = 0; j < areas->num_crouches(); j++)
-			{
-				float dist_x = abs(trajectory->positions[i].x - areas->crouch_pos[j].x);
-				float dist_z = abs(trajectory->positions[i].z - areas->crouch_pos[j].z);
-				float height = (sinf(trajectory->positions[i].x / Areas::CROUCH_WAVE) + 1.0) / 2.0;
-				trajectory->gait_crouch[i] = glm::mix(1.0f - height, trajectory->gait_crouch[i],
-													  glm::clamp(
-														  ((dist_x - (areas->crouch_size[j].x / 2)) +
-														   (dist_z - (areas->crouch_size[j].y / 2))) /
-															  100.0f,
-														  0.0f, 1.0f));
-			}
-		}
-	}
-
-	void forecast_wall(Areas *areas)
-	{
-		for (int i = 0; i < Trajectory::LENGTH; i++)
-		{
-			trajectory->gait_bump[i] = 0.0;
-			for (int j = 0; j < areas->num_walls(); j++)
-			{
-				glm::vec2 trjpoint = glm::vec2(trajectory->positions[i].x, trajectory->positions[i].z);
-				glm::vec2 segpoint = segment_nearest(areas->wall_start[j], areas->wall_stop[j], trjpoint);
-				float segdist = glm::length(segpoint - trjpoint);
-				trajectory->gait_bump[i] = glm::max(trajectory->gait_bump[i], 1.0f - glm::clamp((segdist - areas->wall_width[j]) / 10.0f, 0.0f, 1.0f));
-			}
-		}
-	}
-
-
-	void update(Heightmap *heightmap)
-	{
-		trajectory->rotation();
-
-		for (int i = Trajectory::LENGTH / 2; i < Trajectory::LENGTH; i++)
-		{
-			trajectory->positions[i].y = heightmap->sample(glm::vec2(trajectory->positions[i].x, trajectory->positions[i].z));
-		}
-
-		trajectory->heights[Trajectory::LENGTH / 2] = 0.0;
-		for (int i = 0; i < Trajectory::LENGTH; i += 10)
-		{
-			trajectory->heights[Trajectory::LENGTH / 2] += (trajectory->positions[i].y / ((Trajectory::LENGTH) / 10));
-		}
-
-		root_position = glm::vec3(
-			trajectory->positions[Trajectory::LENGTH / 2].x,
-			trajectory->heights[Trajectory::LENGTH / 2],
-			trajectory->positions[Trajectory::LENGTH / 2].z);
-
-		root_rotation = trajectory->rotations[Trajectory::LENGTH / 2];
-
-		for (int i = 0; i < Trajectory::LENGTH; i += 10)
-		{
-			int w = (Trajectory::LENGTH) / 10;
-			int o = Trajectory::LENGTH + JOINT_NUM * 3 * 2;
-
-			glm::vec3 pos = glm::inverse(root_rotation) * (trajectory->positions[i] - root_position);
-			glm::vec3 dir = glm::inverse(root_rotation) * trajectory->directions[i];
-
-			trajectory->input_position(pos, w, i);
-			trajectory->input_direction(dir, w, i);
-
-			trajectory->input_gaits(w, i);
-
-			glm::vec3 position_r = trajectory->positions[i] + (trajectory->rotations[i] * glm::vec3(trajectory->width, 0, 0));
-			glm::vec3 position_l = trajectory->positions[i] + (trajectory->rotations[i] * glm::vec3(-trajectory->width, 0, 0));
-
-			float R = heightmap->sample(glm::vec2(position_r.x, position_r.z));
-			float L = heightmap->sample(glm::vec2(position_l.x, position_l.z));
-
-			trajectory->input_heights(
-				root_position,
-				R, L,
-				o, w, i);
-		}
-
-		glm::vec3 prev_root_position = glm::vec3(
-			trajectory->positions[Trajectory::LENGTH / 2 - 1].x,
-			trajectory->heights[Trajectory::LENGTH / 2 - 1],
-			trajectory->positions[Trajectory::LENGTH / 2 - 1].z);
-
-		glm::mat3 prev_root_rotation = trajectory->rotations[Trajectory::LENGTH / 2 - 1];
-
-		for (int i = 0; i < JOINT_NUM; i++)
-		{
-			glm::vec3 position = glm::inverse(prev_root_rotation) * (joint_positions[i] - prev_root_position);
-			glm::vec3 previous = glm::inverse(prev_root_rotation) * joint_velocities[i];
-			trajectory->input_previous_state(position, previous, i, JOINT_NUM);
-		}
-	}
-
-		
-	void predict_pfnn()
-	{
+		trajectory->input(heightmap, JOINT_NUM, &root_position, &root_rotation, joint_positions, joint_velocities);
 		trajectory->pfnn->predict(phase);
-	}
 
+		build_local_transform();
+		set_ik();
+
+		trajectory->post_update(&phase, areas);
+
+	}
 
 	void build_local_transform()
 	{
-
 		for (int i = 0; i < JOINT_NUM; i++)
 		{
 			int opos = 8 + (((Trajectory::LENGTH / 2) / 10) * 4) + (JOINT_NUM * 3 * 0);
@@ -448,7 +282,7 @@ void forecast(Areas *areas)
 		}
 	}
 
-	void set_ik(Heightmap *heightmap)
+	void set_ik()
 	{
 
 		glm::vec4 ik_weight = glm::vec4(
@@ -478,8 +312,8 @@ void forecast(Areas *areas)
 		key_tr.y = glm::max(key_tr.y, ik->height[IK::TR]);
 
 		rotate_hip_knee(key_hl, key_hr);
-		rotate_heel(heightmap, ik_weight, key_tl, key_tr);
-		rotate_toe(heightmap, ik_weight);
+		rotate_heel(ik_weight, key_tl, key_tr);
+		rotate_toe(ik_weight);
 		update_locks(ik_weight);
 	}
 
@@ -512,7 +346,7 @@ void forecast(Areas *areas)
 		forward_kinematics();
 	}
 
-	void rotate_heel(Heightmap *heightmap, glm::vec4 ik_weight, glm::vec3 key_tl, glm::vec3 key_tr)
+	void rotate_heel(glm::vec4 ik_weight, glm::vec3 key_tl, glm::vec3 key_tr)
 	{
 		const float heel_max_bend_s = 4;
 		const float heel_max_bend_u = 4;
@@ -573,7 +407,7 @@ void forecast(Areas *areas)
 		forward_kinematics();
 	}
 
-	void rotate_toe(Heightmap *heightmap, glm::vec4 ik_weight)
+	void rotate_toe(glm::vec4 ik_weight)
 	{
 		const float toe_max_bend_d = 0;
 		const float toe_max_bend_u = 10;
@@ -665,40 +499,5 @@ void forecast(Areas *areas)
 			ik->lock[IK::TR] = glm::clamp(ik->lock[IK::TR] - ik->fade, 0.0f, 1.0f);
 		}
 	}
-
-	void post_update_trajectory(Areas *areas)
-	{
-		trajectory->update_past();
-
-		float stand_amount = trajectory->get_stand_amount();
-
-		trajectory->update_current(stand_amount);
-
-		check_collide(areas);
-
-		trajectory->update_future();
-		phase = fmod(phase + (stand_amount * 0.9f + 0.1f) * 2 * M_PI * trajectory->pfnn->Yp(3), 2 * M_PI);
-	}
-
-
-	void check_collide(Areas *areas)
-	{
-		for (int j = 0; j < areas->num_walls(); j++)
-		{
-			glm::vec2 trjpoint = glm::vec2(trajectory->positions[Trajectory::LENGTH / 2].x, trajectory->positions[Trajectory::LENGTH / 2].z);
-			glm::vec2 segpoint = segment_nearest(areas->wall_start[j], areas->wall_stop[j], trjpoint);
-			float segdist = glm::length(segpoint - trjpoint);
-			if (segdist < areas->wall_width[j] + 100.0)
-			{
-				glm::vec2 prjpoint0 = (areas->wall_width[j] + 0.0f) * glm::normalize(trjpoint - segpoint) + segpoint;
-				glm::vec2 prjpoint1 = (areas->wall_width[j] + 100.0f) * glm::normalize(trjpoint - segpoint) + segpoint;
-				glm::vec2 prjpoint = glm::mix(prjpoint0, prjpoint1, glm::clamp((segdist - areas->wall_width[j]) / 100.0f, 0.0f, 1.0f));
-				trajectory->positions[Trajectory::LENGTH / 2].x = prjpoint.x;
-				trajectory->positions[Trajectory::LENGTH / 2].z = prjpoint.y;
-			}
-		}
-	}
-
-
 
 };
