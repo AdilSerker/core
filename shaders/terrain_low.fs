@@ -40,6 +40,6 @@ void main() {
   float ambient = 0.5 * fAO + 0.2;
 
   gl_FragColor.rgb = to_gamma(color * vec3(diffuse + ambient));
-  //gl_FragColor.rgb = vec3(fAO);
+  // gl_FragColor.rgb = vec3(fAO);
   gl_FragColor.a = 1.0;
 } 

@@ -53,6 +53,9 @@ struct Character
 	glm::vec3 root_position;
 	glm::mat3 root_rotation;
 
+	Heightmap *heightmap;
+	Areas *areas;
+
 	enum
 	{
 		JOINT_ROOT_L = 1,
@@ -69,7 +72,13 @@ struct Character
 	};
 
 	Character(Trajectory *trajectory, IK *ik, CharacterOptions *options)
-		: vbo(0), tbo(0), ntri(66918), nvtx(11200), phase(0), strafe_amount(0), strafe_target(0), crouched_amount(0), crouched_target(0), responsive(0), trajectory(trajectory), ik(ik), options(options) {}
+		: vbo(0), tbo(0), ntri(66918), nvtx(11200), phase(0), strafe_amount(0), strafe_target(0), crouched_amount(0), crouched_target(0), responsive(0), trajectory(trajectory), ik(ik), options(options) {
+			load(
+				"./network/character_vertices.bin",
+				"./network/character_triangles.bin",
+				"./network/character_parents.bin",
+				"./network/character_xforms.bin");
+		}
 
 	~Character()
 	{
@@ -181,11 +190,31 @@ struct Character
 	}
 
 
-	void update_move(int x_vel, int y_vel, glm::vec3 cam_direct, int vel, int strafe)
+	void update_move(glm::vec2 direction_velocity, glm::vec3 cam_direct, int vel, int strafe, bool is_crouched)
 	{
-		trajectory->input_controller(x_vel, y_vel, cam_direct, vel, strafe,
-			&strafe_target, &strafe_amount, &crouched_target, &crouched_amount);
+			
+		glm::vec3 trajectory_target_direction_new = glm::normalize(glm::vec3(cam_direct.x, 0.0, cam_direct.z));
+		glm::mat3 trajectory_target_rotation = glm::mat3(glm::rotate(atan2f(
+		trajectory_target_direction_new.x,
+		trajectory_target_direction_new.z), glm::vec3(0,1,0)));
+
+		float target_vel_speed = 2.5 + 2.5 * ((vel / 32768.0) + 1.0);
 		
+		glm::vec3 trajectory_target_velocity_new = target_vel_speed
+			* (trajectory_target_rotation * glm::vec3(direction_velocity.x / 32768.0, 0, direction_velocity.y / 32768.0));
+		trajectory->target_vel = glm::mix(trajectory->target_vel, trajectory_target_velocity_new, options->extra_velocity_smooth);
+		
+		strafe_target = ((strafe / 32768.0) + 1.0) / 2.0;
+		strafe_amount = glm::mix(strafe_amount, strafe_target, options->extra_strafe_smooth);
+		
+		glm::vec3 trajectory_target_velocity_dir = glm::length(trajectory->target_vel) < 1e-05 ? trajectory->target_dir : glm::normalize(trajectory->target_vel);
+		trajectory_target_direction_new = mix_directions(trajectory_target_velocity_dir, trajectory_target_direction_new, strafe_amount);  
+		trajectory->target_dir = mix_directions(trajectory->target_dir, trajectory_target_direction_new, options->extra_direction_smooth);  
+		
+		crouched_target = is_crouched ? 1.0 : 0.0;
+
+		crouched_amount = glm::mix(crouched_amount, crouched_target, options->extra_crouched_smooth);
+		trajectory->update_gait(vel, crouched_amount, options->extra_gait_smooth);
 	}
 
 void forecast(Areas *areas)

@@ -57,26 +57,26 @@ static void pre_render()
 
 	/* Update Target Direction / Velocity */
 
-	int x_vel = 0;
-	int y_vel = 0;
+	glm::vec2 direction_velocity = glm::vec2();
 	int vel = -32768;
 	int strafe = -32768;
+	bool is_crouched = false;
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		y_vel += 25000;
+		direction_velocity.y += 32768;
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		x_vel += 25000;
+		direction_velocity.x += 32768;
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		y_vel -= 25000;
+		direction_velocity.y -= 32768;
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		x_vel -= 25000;
+		direction_velocity.x -= 32768;
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{
@@ -86,8 +86,11 @@ static void pre_render()
 	{
 		strafe += 65535;
 	}
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+		is_crouched = true;
+	}
 
-	character->update_move(x_vel, y_vel, camera->direction(), vel, strafe);
+	character->update_move(direction_velocity, camera->direction(), vel, strafe, is_crouched);
 
 	character->forecast(areas);
 
@@ -216,6 +219,43 @@ void render()
 	glDisable(GL_CULL_FACE);
 }
 
+
+void load_world4(void) {
+  
+        printf("Loading World 4\n");
+        
+        heightmap->load("./heightmaps/hmap_013_smooth.txt", 1.0);
+        
+        areas->clear();
+        areas->add_wall(glm::vec2( 1225, -1000), glm::vec2( 1225, 1000), 20);
+        areas->add_wall(glm::vec2( 1225,  1000), glm::vec2(-1225, 1000), 20);
+        areas->add_wall(glm::vec2(-1225,  1000), glm::vec2(-1225,-1000), 20);
+        areas->add_wall(glm::vec2(-1225, -1000), glm::vec2( 1225,-1000), 20);
+        
+        areas->add_jump(glm::vec3( 237.64, 5,  452.98), 75, 100);
+        areas->add_jump(glm::vec3( 378.40, 5,  679.64), 75, 100);
+        areas->add_jump(glm::vec3( 227.17, 5,  866.28), 75, 100);
+        areas->add_jump(glm::vec3( -43.93, 5,  609.78), 75, 100);
+        areas->add_jump(glm::vec3( 810.12, 5,  897.37), 75, 100);
+        areas->add_jump(glm::vec3( 945.85, 5,  493.90), 75, 100);
+        areas->add_jump(glm::vec3( 618.69, 5,  220.01), 75, 100);
+        areas->add_jump(glm::vec3( 950.29, 5,  246.37), 75, 100);
+        areas->add_jump(glm::vec3( 703.68, 5, -262.97), 75, 100);
+        areas->add_jump(glm::vec3( 798.17, 5, -579.91), 75, 100);
+        areas->add_jump(glm::vec3(1137.51, 5, -636.69), 75, 100);
+        areas->add_jump(glm::vec3( 212.80, 5, -638.25), 75, 100);
+        areas->add_jump(glm::vec3(  79.65, 5, -909.37), 75, 100);
+        areas->add_jump(glm::vec3(-286.95, 5, -771.64), 75, 100);
+        areas->add_jump(glm::vec3(-994.98, 5, -547.12), 75, 100);
+        areas->add_jump(glm::vec3(-384.53, 5,  245.73), 75, 100);
+        areas->add_jump(glm::vec3(-559.39, 5,  672.81), 75, 100);
+        areas->add_jump(glm::vec3(-701.95, 5,  902.13), 75, 100);
+
+        character->reset_position(glm::vec2(300, 0), heightmap);
+
+    }
+
+
 int gl_init()
 {
 
@@ -252,16 +292,12 @@ int gl_init()
 		return -1;
 	}
 
-	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-	// Hide the mouse and enable unlimited mouvement
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	// Dark blue background
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
 
 
@@ -285,11 +321,6 @@ int main(void)
 	char_options = new CharacterOptions();
 	ik = new IK();
 	character = new Character(trajectory, ik, char_options);
-	character->load(
-		"./network/character_vertices.bin",
-		"./network/character_triangles.bin",
-		"./network/character_parents.bin",
-		"./network/character_xforms.bin");
 
 	shader_terrain = new Shader();
 	shader_terrain->load("./shaders/terrain.vs", "./shaders/terrain_low.fs");
@@ -298,29 +329,34 @@ int main(void)
 
 	heightmap = new Heightmap();
 	areas = new Areas();
+	
+	load_world4();
 
-	heightmap->load("./heightmaps/hmap_004_smooth.txt", 1.0);
+	double lastTime = glfwGetTime();
+	int nbFrames = 0;
 
-	areas->clear();
-	areas->add_wall(glm::vec2(1013.78, -1023.47), glm::vec2( 1013.78,  1037.65), 20);
-	areas->add_wall(glm::vec2(1013.78,  1037.65), glm::vec2(-1005.93,  1032.48), 20);
-	areas->add_wall(glm::vec2(-1005.93, 1032.48), glm::vec2( -1012.46, -985.26), 20);
-	areas->add_wall(glm::vec2(-1012.46, -985.26), glm::vec2( -680.57, -1001.82), 20);
-	areas->add_wall(glm::vec2(-680.57, -1001.82), glm::vec2( -571.86, -1008.58), 20);
-	areas->add_wall(glm::vec2(-571.86, -1008.58), glm::vec2( -441.50, -1025.14), 20);
-	areas->add_wall(glm::vec2(-441.50, -1025.14), glm::vec2( -205.33, -1023.47), 20);
-	areas->add_wall(glm::vec2(-205.33, -1023.47), glm::vec2( 1018.95, -1023.47), 20);
-
-	character->reset_position(glm::vec2(0, 0), heightmap);
 
 	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
 		   glfwWindowShouldClose(window) == 0)
 	{
+		double currentTime = glfwGetTime();
+		nbFrames++;
+		if ( currentTime - lastTime >= 1.0 ){
+			printf("fps: %i\n", nbFrames);
+			nbFrames = 0;
+			lastTime += 1.0;
+		}
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		render();
 
 		pre_render();
+
+		if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
+		{
+			// autogenerate_location();
+		}
 
 
 		glfwSwapBuffers(window);

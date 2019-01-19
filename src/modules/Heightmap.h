@@ -21,6 +21,8 @@ class Heightmap {
   ~Heightmap();
   
   void load(const char* filename, float multiplier);
+
+  void generate(int size, float multiplier);
   
   float sample(glm::vec2 pos);
   

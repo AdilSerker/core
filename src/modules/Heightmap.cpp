@@ -156,7 +156,7 @@ void Heightmap::load(const char* filename, float multiplier) {
   free(tbo_data);
   
 }
-  
+
 float Heightmap::sample(glm::vec2 pos) {
 
   int w = data.size();
