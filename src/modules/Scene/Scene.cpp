@@ -15,7 +15,7 @@ Scene::~Scene() {
 }
 
 void Scene::draw(LightDirectional *light, CameraOrbit *camera) {
-    	glm::mat4 light_view = glm::lookAt(camera->target + light->position, camera->target, glm::vec3(0, 1, 0));
+	glm::mat4 light_view = glm::lookAt(camera->target + light->position, camera->target, glm::vec3(0, 1, 0));
 	glm::mat4 light_proj = glm::ortho(-500.0f, 500.0f, -500.0f, 500.0f, 10.0f, 10000.0f);
 
 	glm::vec3 light_direction = glm::normalize(light->target - light->position);

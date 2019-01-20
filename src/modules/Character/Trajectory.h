@@ -12,7 +12,7 @@
 #include "../Scene/Areas.h"
 #include "../Scene/Heightmap.h"
 
-#include "../helpers.cpp"
+#include "../helpers.hpp"
 
 using namespace glm;
 
