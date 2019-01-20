@@ -9,10 +9,10 @@
 #include "Options.h"
 #include "PFNN.h"
 
-#include "Areas.h"
-#include "Heightmap.h"
+#include "../Scene/Areas.h"
+#include "../Scene/Heightmap.h"
 
-#include "helpers.cpp"
+#include "../helpers.cpp"
 
 using namespace glm;
 
@@ -28,8 +28,15 @@ class Trajectory
 
 	vec3 target_dir, target_vel;
 
-	Trajectory(PFNN *pfnn)
-		: width(25), target_dir(vec3(0, 0, 1)), target_vel(vec3(0)), pfnn(pfnn) {}
+	Trajectory()
+		: width(25), target_dir(vec3(0, 0, 1)), target_vel(vec3(0))
+	{
+		this->pfnn = new PFNN(MODE_CONSTANT);
+	}
+
+	~Trajectory() {
+		delete this->pfnn;
+	}
 
 	vec3 get_center_position();
 

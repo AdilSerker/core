@@ -5,7 +5,7 @@ ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	EXT = 
 endif
 
-MODULE = src/modules/*.cpp
+MODULE = src/modules/*.cpp src/modules/**/*.cpp
 
 base: src/main.cpp 
 	g++ -std=gnu++11 -Wall -O3 -ffast-math $< $(MODULE) $(LFLAGS) -o $@
