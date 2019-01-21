@@ -159,7 +159,7 @@ void Game::loop() {
 		double currentTime = glfwGetTime();
 		nbFrames++;
 		if ( currentTime - lastTime >= 1.0 ){
-			printf("fps: %i\n", nbFrames);
+			printf("FPS: %i\n", nbFrames);
 			nbFrames = 0;
 			lastTime += 1.0;
 		}
