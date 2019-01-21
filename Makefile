@@ -6,10 +6,29 @@ ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 endif
 
 MODULE = src/modules/*.cpp src/modules/**/*.cpp
-CFLAGS = -O3 -Wall -ffast-math
+WFLAGS = -Wall 
+CFLAGS = -O3 -ffast-math
+
+DIR_OBJ = obj
 
 base: src/main.cpp 
-	g++ -std=gnu++11 $(CFLAGS) $< $(MODULE) $(LFLAGS) -o $@
-  
-clean:
-	rm base$(EXT)
+	rm -f base && g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(MODULE) $(LFLAGS) -o $@
+
+debug: src/main.cpp 
+	g++ -std=gnu++11 $(WFLAGS) $< $(MODULE) -g -c
+
+compile: src/main.cpp 
+	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(MODULE) -c
+
+game: src/modules/Game.cpp
+	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
+
+scene: src/modules/Scene/Scene.cpp
+	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
+
+character: src/modules/Character/Character.cpp
+	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
+
+core: 
+	rm -f core && g++ ./*.o $(LFLAGS) -o $@
+
