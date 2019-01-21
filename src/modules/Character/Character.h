@@ -31,6 +31,7 @@ class Character
 	~Character();
 
 	void draw(LightDirectional *light, CameraOrbit *camera);
+	void render_shadow(LightDirectional *light, CameraOrbit *camera);
 	glm::vec3 getPosition();
 	void reset_position(glm::vec2 position, Heightmap *heightmap, Areas *areas);
 	void update_move(glm::vec2 direction_velocity, glm::vec3 cam_direct, int vel, int strafe, bool is_crouched);
@@ -40,6 +41,7 @@ class Character
 	IK *ik;
 
 	Shader *shader;	
+	Shader *shader_shadow;	
 
 	enum
 	{

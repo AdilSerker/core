@@ -169,6 +169,13 @@ void Game::loop() {
 		update();
 		render();
 
+		if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+			scene->load_location1();
+		}
+		if(glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
+			scene->load_start_location();
+		}
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 

@@ -18,6 +18,7 @@ class Scene {
     void draw(LightDirectional *light, CameraOrbit *camera);
     void add_character(Character *character);
     void load_start_location();
+    void load_location1();
 
     private:
     Shader *shader;

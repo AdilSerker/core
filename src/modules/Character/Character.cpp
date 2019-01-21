@@ -15,8 +15,10 @@ Character::Character()
 	this->trajectory = new Trajectory();
 	this->ik = new IK();
 	this->shader = new Shader();
+	this->shader_shadow = new Shader();
 
 	shader->load("./shaders/character.vs", "./shaders/character_low.fs");
+	shader_shadow->load("./shaders/character_shadow.vs", "./shaders/character_shadow.fs");
 
 	load("./network/character_vertices.bin",
 		"./network/character_triangles.bin",
@@ -40,6 +42,7 @@ Character::~Character()
 	delete trajectory;
 	delete ik;
 	delete shader;
+	delete shader_shadow;
 }
 
 void Character::draw(LightDirectional *light, CameraOrbit *camera) {
@@ -91,7 +94,64 @@ void Character::draw(LightDirectional *light, CameraOrbit *camera) {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glUseProgram(0);
+
+	render_shadow(light, camera);
 }
+
+void Character::render_shadow(LightDirectional *light, CameraOrbit *camera) {
+	glm::mat4 light_view = glm::lookAt(camera->target + light->position, camera->target, glm::vec3(0,1,0));
+  	glm::mat4 light_proj = glm::ortho(-500.0f, 500.0f, -500.0f, 500.0f, 10.0f, 10000.0f);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, light->fbo);
+	
+	glViewport(0, 0, 1024, 1024);
+
+	glClearDepth(1.0f);  
+	glClear(GL_DEPTH_BUFFER_BIT);
+	
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	
+	glUseProgram(shader_shadow->program);
+	
+	glUniformMatrix4fv(glGetUniformLocation(shader_shadow->program, "light_view"), 1, GL_FALSE, glm::value_ptr(light_view));
+	glUniformMatrix4fv(glGetUniformLocation(shader_shadow->program, "light_proj"), 1, GL_FALSE, glm::value_ptr(light_proj));
+	glUniformMatrix4fv(glGetUniformLocation(shader_shadow->program, "joints"), Character::JOINT_NUM, GL_FALSE, (float*)joint_mesh_xform);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	
+	glEnableVertexAttribArray(glGetAttribLocation(shader_shadow->program, "vPosition"));  
+	glEnableVertexAttribArray(glGetAttribLocation(shader_shadow->program, "vWeightVal"));
+	glEnableVertexAttribArray(glGetAttribLocation(shader_shadow->program, "vWeightIds"));
+
+	glVertexAttribPointer(glGetAttribLocation(shader_shadow->program, "vPosition"),  3, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void*)(sizeof(float) *  0));
+	glVertexAttribPointer(glGetAttribLocation(shader_shadow->program, "vWeightVal"), 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void*)(sizeof(float) *  7));
+	glVertexAttribPointer(glGetAttribLocation(shader_shadow->program, "vWeightIds"), 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void*)(sizeof(float) * 11));
+	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tbo);
+	glDrawElements(GL_TRIANGLES, ntri, GL_UNSIGNED_INT, (void*)0);
+	
+	glDisableVertexAttribArray(glGetAttribLocation(shader_shadow->program, "vPosition"));  
+	glDisableVertexAttribArray(glGetAttribLocation(shader_shadow->program, "vWeightVal"));
+	glDisableVertexAttribArray(glGetAttribLocation(shader_shadow->program, "vWeightIds"));
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glUseProgram(0);
+	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glCullFace(GL_BACK);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	
+	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 
 glm::vec3 Character::getPosition()
 {
@@ -187,7 +247,6 @@ void Character::load(const char *filename_v, const char *filename_t, const char 
 	}
 	fclose(f);
 }
-
 
 void Character::update_move(glm::vec2 direction_velocity, glm::vec3 cam_direct, int vel, int strafe, bool is_crouched)
 {

@@ -25,9 +25,9 @@ float shadow_amount(vec3 position) {
 
 vec3 to_gamma(vec3 color) {
   vec3 ret;
-  ret.r = pow(color.r, 2.2);
-  ret.g = pow(color.g, 2.2);
-  ret.b = pow(color.b, 2.2);
+  ret.r = pow(color.r, 3.2);
+  ret.g = pow(color.g, 1.2);
+  ret.b = pow(color.b, 5.2);
 	return ret;
 }
   

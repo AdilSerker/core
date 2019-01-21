@@ -19,11 +19,6 @@ CameraOrbit::CameraOrbit()
 
 void CameraOrbit::update(double xpos, double ypos)
 {
-	static double lastTime = glfwGetTime();
-
-	// Compute time difference between current and last frame
-	double currentTime = glfwGetTime();
-	float deltaTime = float(currentTime - lastTime);
 
 	float horizontalAngle = mouseSpeed * float(WINDOW_WIDTH/2 - xpos );
 	float verticalAngle = invert_y * mouseSpeed * float(WINDOW_HEIGHT/2 - ypos);

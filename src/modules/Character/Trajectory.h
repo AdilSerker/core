@@ -29,7 +29,7 @@ class Trajectory
 	vec3 target_dir, target_vel;
 
 	Trajectory()
-		: width(25), target_dir(vec3(0, 0, 1)), target_vel(vec3(0))
+		: target_dir(vec3(0, 0, 1)), target_vel(vec3(0)), width(25)
 	{
 		this->pfnn = new PFNN(MODE_CONSTANT);
 	}
