@@ -26,9 +26,18 @@ game: src/modules/Game.cpp
 scene: src/modules/Scene/Scene.cpp
 	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
 
+hm: src/modules/Scene/Heightmap.cpp
+	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
+
 character: src/modules/Character/Character.cpp
 	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
 
-core: 
-	rm -f core && g++ ./*.o $(LFLAGS) -o $@
+camera: src/modules/CameraOrbit.cpp
+	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
+
+a: 
+	rm -f a && g++ ./*.o $(LFLAGS) -o $@
+
+clean: 
+	rm -f ./*.o core
 

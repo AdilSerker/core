@@ -9,10 +9,15 @@
 
 class Heightmap {
   public:
+  bool loading;
+
   float hscale;
   float vscale;
   float offset;
   std::vector<std::vector<float>> data;
+
+  int range;
+
   GLuint vbo;
   GLuint tbo;
   
@@ -25,6 +30,11 @@ class Heightmap {
   void generate(int size, float multiplier);
   
   float sample(glm::vec2 pos);
+
+  private: 
+  void diamondSquare(unsigned x1, unsigned y1, unsigned x2, unsigned y2, int range, unsigned level);
+
+  bool initialized;
   
 };
 

@@ -1,5 +1,7 @@
 .vscode
+a
 base
 core
 debug
 *.o
+heightmaps/*_ao.txt

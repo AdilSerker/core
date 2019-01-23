@@ -133,6 +133,7 @@ void Game::render() {
 		camera->target += new_target;
 	}
 
+
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
@@ -162,7 +163,14 @@ void Game::loop() {
 			printf("FPS: %i\n", nbFrames);
 			nbFrames = 0;
 			lastTime += 1.0;
+
+
+			std::cout << "X: " << character->getPosition().x;
+			std::cout << "\tZ: " << character->getPosition().z << '\n';
+
+			std::cout << scene->heightmap->sample(glm::vec2(character->getPosition().x, character->getPosition().z)) << std::endl;
 		}
+
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -174,6 +182,10 @@ void Game::loop() {
 		}
 		if(glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
 			scene->load_start_location();
+		}
+
+		if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+			scene->generate();
 		}
 
 		glfwSwapBuffers(window);

@@ -97,48 +97,54 @@ void Scene::load_start_location() {
 }
 
 void Scene::load_location1() {
-
-	heightmap->load("./heightmaps/hmap_007_smooth.txt", 1.0);
+	heightmap->load("./heightmaps/hmap_007_smooth.txt", 6.0);
 
 	areas->clear();
-	areas->add_wall(glm::vec2(1137.99,  -2583.42), glm::vec2(1154.53,   2604.02), 20);
-	areas->add_wall(glm::vec2(1154.53,   2604.02), glm::vec2(644.10,    2602.73), 20);
-	areas->add_wall(glm::vec2(644.10,    2602.73), glm::vec2(504.73,    2501.38), 20);
-	areas->add_wall(glm::vec2(504.73,    2501.38), glm::vec2(12.73,     2522.49), 20);
-	areas->add_wall(glm::vec2(12.73,     2522.49), glm::vec2(-84.41,    2497.15), 20);
-	areas->add_wall(glm::vec2(-84.41,    2497.15), glm::vec2(-342.03,   2481.34), 20);
-	areas->add_wall(glm::vec2(-342.03,   2481.34), glm::vec2(-436.74,   2453.81), 20);
-	areas->add_wall(glm::vec2(-436.74,   2453.81), glm::vec2(-555.85,   2480.54), 20);
-	areas->add_wall(glm::vec2(-555.85,   2480.54), glm::vec2(-776.98,   2500.82), 20);
-	areas->add_wall(glm::vec2(-776.98,   2500.82), glm::vec2(-877.50,   2466.82), 20);
-	areas->add_wall(glm::vec2(-877.50,   2466.82), glm::vec2(-975.67,   2488.11), 20);
-	areas->add_wall(glm::vec2(-975.67,   2488.11), glm::vec2(-995.97,   2607.62), 20);
-	areas->add_wall(glm::vec2(-995.97,   2607.62), glm::vec2(-1142.54,  2612.13), 20);
-	areas->add_wall(glm::vec2(-1142.54,  2612.13), glm::vec2(-1151.56,  2003.29), 20);
-	areas->add_wall(glm::vec2(-1151.56,  2003.29), glm::vec2(-1133.52,  1953.68), 20);
-	areas->add_wall(glm::vec2(-1133.52,  1953.68), glm::vec2(-1153.82,  1888.29), 20);
-	areas->add_wall(glm::vec2(-1153.82,  1888.29), glm::vec2(-1151.56, -2608.12), 20);
-	areas->add_wall(glm::vec2(-1151.56, -2608.12), glm::vec2(-1126.76, -2608.12), 20);
-	areas->add_wall(glm::vec2(-1126.76, -2608.12), glm::vec2(-1133.52,  -427.57), 20);
-	areas->add_wall(glm::vec2(-1133.52,  -427.57), glm::vec2(-1074.89,  -184.03), 20);
-	areas->add_wall(glm::vec2(-1074.89,  -184.03), glm::vec2(-973.42,     48.23), 20);
-	areas->add_wall(glm::vec2(-973.42,     48.23), glm::vec2(-928.32,    217.35), 20);
-	areas->add_wall(glm::vec2(-928.32,    217.35), glm::vec2(-732.14,    535.30), 20);
-	areas->add_wall(glm::vec2(-732.14,    535.30), glm::vec2(-734.39,    436.09), 20);
-	areas->add_wall(glm::vec2(-734.39,    436.09), glm::vec2(-838.12,    167.75), 20);
-	areas->add_wall(glm::vec2(-838.12,    167.75), glm::vec2(-937.34,   -427.57), 20);
-	areas->add_wall(glm::vec2(-937.34,   -427.57), glm::vec2(-930.57,  -1164.94), 20);
-	areas->add_wall(glm::vec2(-930.57,  -1164.94), glm::vec2(-844.88,  -1478.38), 20);
-	areas->add_wall(glm::vec2(-844.88,  -1478.38), glm::vec2(-691.55,  -2166.15), 20);
-	areas->add_wall(glm::vec2(-691.55,  -2166.15), glm::vec2(-648.70,  -2610.37), 20);
-	areas->add_wall(glm::vec2(-648.70,  -2610.37), glm::vec2(1139.49,  -2581.06), 20);
-	areas->add_wall(glm::vec2(-314.97,  -2472.82), glm::vec2(-258.59,  -2508.90), 20);
-	areas->add_wall(glm::vec2(-258.59,  -2508.90), glm::vec2(-195.45,  -2504.39), 20);
-	areas->add_wall(glm::vec2(-195.45,  -2504.39), glm::vec2(-199.96,  -2477.33), 20);
-	areas->add_wall(glm::vec2(-199.96,  -2477.33), glm::vec2(-238.30,  -2450.27), 20);
-	areas->add_wall(glm::vec2(-238.30,  -2450.27), glm::vec2(-281.14,  -2441.25), 20);
-	areas->add_wall(glm::vec2(-281.14,  -2441.25), glm::vec2(-310.46,  -2466.06), 20);
+	// areas->add_wall(glm::vec2(1137.99,  -2583.42), glm::vec2(1154.53,   2604.02), 20);
+	// areas->add_wall(glm::vec2(1154.53,   2604.02), glm::vec2(644.10,    2602.73), 20);
+	// areas->add_wall(glm::vec2(644.10,    2602.73), glm::vec2(504.73,    2501.38), 20);
+	// areas->add_wall(glm::vec2(504.73,    2501.38), glm::vec2(12.73,     2522.49), 20);
+	// areas->add_wall(glm::vec2(12.73,     2522.49), glm::vec2(-84.41,    2497.15), 20);
+	// areas->add_wall(glm::vec2(-84.41,    2497.15), glm::vec2(-342.03,   2481.34), 20);
+	// areas->add_wall(glm::vec2(-342.03,   2481.34), glm::vec2(-436.74,   2453.81), 20);
+	// areas->add_wall(glm::vec2(-436.74,   2453.81), glm::vec2(-555.85,   2480.54), 20);
+	// areas->add_wall(glm::vec2(-555.85,   2480.54), glm::vec2(-776.98,   2500.82), 20);
+	// areas->add_wall(glm::vec2(-776.98,   2500.82), glm::vec2(-877.50,   2466.82), 20);
+	// areas->add_wall(glm::vec2(-877.50,   2466.82), glm::vec2(-975.67,   2488.11), 20);
+	// areas->add_wall(glm::vec2(-975.67,   2488.11), glm::vec2(-995.97,   2607.62), 20);
+	// areas->add_wall(glm::vec2(-995.97,   2607.62), glm::vec2(-1142.54,  2612.13), 20);
+	// areas->add_wall(glm::vec2(-1142.54,  2612.13), glm::vec2(-1151.56,  2003.29), 20);
+	// areas->add_wall(glm::vec2(-1151.56,  2003.29), glm::vec2(-1133.52,  1953.68), 20);
+	// areas->add_wall(glm::vec2(-1133.52,  1953.68), glm::vec2(-1153.82,  1888.29), 20);
+	// areas->add_wall(glm::vec2(-1153.82,  1888.29), glm::vec2(-1151.56, -2608.12), 20);
+	// areas->add_wall(glm::vec2(-1151.56, -2608.12), glm::vec2(-1126.76, -2608.12), 20);
+	// areas->add_wall(glm::vec2(-1126.76, -2608.12), glm::vec2(-1133.52,  -427.57), 20);
+	// areas->add_wall(glm::vec2(-1133.52,  -427.57), glm::vec2(-1074.89,  -184.03), 20);
+	// areas->add_wall(glm::vec2(-1074.89,  -184.03), glm::vec2(-973.42,     48.23), 20);
+	// areas->add_wall(glm::vec2(-973.42,     48.23), glm::vec2(-928.32,    217.35), 20);
+	// areas->add_wall(glm::vec2(-928.32,    217.35), glm::vec2(-732.14,    535.30), 20);
+	// areas->add_wall(glm::vec2(-732.14,    535.30), glm::vec2(-734.39,    436.09), 20);
+	// areas->add_wall(glm::vec2(-734.39,    436.09), glm::vec2(-838.12,    167.75), 20);
+	// areas->add_wall(glm::vec2(-838.12,    167.75), glm::vec2(-937.34,   -427.57), 20);
+	// areas->add_wall(glm::vec2(-937.34,   -427.57), glm::vec2(-930.57,  -1164.94), 20);
+	// areas->add_wall(glm::vec2(-930.57,  -1164.94), glm::vec2(-844.88,  -1478.38), 20);
+	// areas->add_wall(glm::vec2(-844.88,  -1478.38), glm::vec2(-691.55,  -2166.15), 20);
+	// areas->add_wall(glm::vec2(-691.55,  -2166.15), glm::vec2(-648.70,  -2610.37), 20);
+	// areas->add_wall(glm::vec2(-648.70,  -2610.37), glm::vec2(1139.49,  -2581.06), 20);
+	// areas->add_wall(glm::vec2(-314.97,  -2472.82), glm::vec2(-258.59,  -2508.90), 20);
+	// areas->add_wall(glm::vec2(-258.59,  -2508.90), glm::vec2(-195.45,  -2504.39), 20);
+	// areas->add_wall(glm::vec2(-195.45,  -2504.39), glm::vec2(-199.96,  -2477.33), 20);
+	// areas->add_wall(glm::vec2(-199.96,  -2477.33), glm::vec2(-238.30,  -2450.27), 20);
+	// areas->add_wall(glm::vec2(-238.30,  -2450.27), glm::vec2(-281.14,  -2441.25), 20);
+	// areas->add_wall(glm::vec2(-281.14,  -2441.25), glm::vec2(-310.46,  -2466.06), 20);
 
-	character->reset_position(glm::vec2(300, 0), heightmap, areas);
+	character->reset_position(glm::vec2(0, 0), heightmap, areas);
+}
+
+void Scene::generate() {
+	heightmap->generate(pow(2, 10)+1, 1.0);
+	areas->clear();
+	
+	character->reset_position(glm::vec2(0, 0), heightmap, areas);
 }
 

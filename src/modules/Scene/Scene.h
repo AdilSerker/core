@@ -19,11 +19,12 @@ class Scene {
     void add_character(Character *character);
     void load_start_location();
     void load_location1();
+    void generate();
 
+    Heightmap *heightmap;
     private:
     Shader *shader;
     Character *character;
-    Heightmap *heightmap;
     Areas *areas;
 };
 

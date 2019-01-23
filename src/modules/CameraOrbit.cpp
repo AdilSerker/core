@@ -47,5 +47,5 @@ glm::mat4 CameraOrbit::view_matrix()
 
 glm::mat4 CameraOrbit::proj_matrix()
 {
-	return glm::perspective(45.0f, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 1.0f, 10000.0f);
+	return glm::perspective(45.0f, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 1.0f, 1000000.0f);
 }
