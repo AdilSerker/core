@@ -9,15 +9,13 @@ MODULE = src/modules/*.cpp src/modules/**/*.cpp
 WFLAGS = -Wall 
 CFLAGS = -O3 -ffast-math
 
-DIR_OBJ = obj
-
 base: src/main.cpp 
-	rm -f base && g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(MODULE) $(LFLAGS) -o $@
+	rm -f game && g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(MODULE) $(LFLAGS) -o game
 
 debug: src/main.cpp 
 	g++ -std=gnu++11 $(WFLAGS) $< $(MODULE) -g -c
 
-compile: src/main.cpp 
+all: src/main.cpp 
 	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(MODULE) -c
 
 game: src/modules/Game.cpp
@@ -29,6 +27,8 @@ scene: src/modules/Scene/Scene.cpp
 character: src/modules/Character/Character.cpp
 	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
 
-core: 
-	rm -f core && g++ ./*.o $(LFLAGS) -o $@
+build: 
+	rm -f core && g++ ./*.o $(LFLAGS) -o game
 
+clean:
+	rm -f core game ./*.o

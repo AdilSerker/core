@@ -1,10 +1,11 @@
 #include "Game.h"
 
 #include <GLFW/glfw3.h>
-extern GLFWwindow* window;
+extern GLFWwindow *window;
 
-Game::~Game() {
-    glDeleteVertexArrays(1, &VertexArrayID);
+Game::~Game()
+{
+	glDeleteVertexArrays(1, &VertexArrayID);
 
 	delete camera;
 	delete light;
@@ -14,20 +15,21 @@ Game::~Game() {
 	glfwTerminate();
 }
 
-void Game::init() {
-    gl_init();
+void Game::init()
+{
+	gl_init();
 
 	this->camera = new CameraOrbit();
 	this->light = new LightDirectional();
 	this->character = new Character();
 	this->scene = new Scene();
 
-    scene->add_character(character);
+	scene->add_character(character);
 	scene->load_start_location();
-	
 }
 
-void Game::gl_init() {
+void Game::gl_init()
+{
 
 	if (!glfwInit())
 	{
@@ -52,7 +54,6 @@ void Game::gl_init() {
 	}
 	glfwMakeContextCurrent(window);
 
-
 	glewExperimental = true;
 	if (glewInit() != GLEW_OK)
 	{
@@ -66,17 +67,34 @@ void Game::gl_init() {
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+	glfwSetWindowUserPointer(window, this);
+	glfwSetCharCallback(window, [](GLFWwindow *window, unsigned int codepoint) -> void {
+		Game *pw = (Game *)glfwGetWindowUserPointer(window);
+
+		// std::cout << codepoint << std::endl;
+
+		if (codepoint == 49)
+		{
+			pw->scene->load_location1();
+		}
+
+		if (codepoint == 48)
+		{
+			pw->scene->load_start_location();
+		}
+	});
+
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 	glDepthFunc(GL_LESS);
 
-    glGenVertexArrays(1, &VertexArrayID);
+	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
-
 }
 
-void Game::update() {
-    double xpos, ypos;
+void Game::update()
+{
+	double xpos, ypos;
 	glfwGetCursorPos(window, &xpos, &ypos);
 	glfwSetCursorPos(window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
@@ -92,7 +110,8 @@ void Game::update() {
 	character->update_move(direction_velocity, camera->direction(), vel, strafe, is_crouched);
 }
 
-void Game::get_input_keyboard(glm::vec2 *direction_velocity, int *vel, int *strafe, bool *is_crouched) {
+void Game::get_input_keyboard(glm::vec2 *direction_velocity, int *vel, int *strafe, bool *is_crouched)
+{
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
@@ -118,16 +137,18 @@ void Game::get_input_keyboard(glm::vec2 *direction_velocity, int *vel, int *stra
 	{
 		*strafe += 65535;
 	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+	{
 		*is_crouched = true;
 	}
-
 }
 
-void Game::render() {
-    float distance = glm::length(camera->target - character->getPosition());
-	
-	if(distance > 100) {
+void Game::render()
+{
+	float distance = glm::length(camera->target - character->getPosition());
+
+	if (distance > 100)
+	{
 		glm::vec3 new_target = glm::normalize(character->getPosition() - camera->target) * (distance - 100);
 
 		camera->target += new_target;
@@ -147,7 +168,8 @@ void Game::render() {
 	glDisable(GL_CULL_FACE);
 }
 
-void Game::loop() {
+void Game::loop()
+{
 
 	double lastTime = glfwGetTime();
 	int nbFrames = 0;
@@ -158,7 +180,8 @@ void Game::loop() {
 		printf("\033c");
 		double currentTime = glfwGetTime();
 		nbFrames++;
-		if ( currentTime - lastTime >= 1.0 ){
+		if (currentTime - lastTime >= 1.0)
+		{
 			printf("FPS: %i\n", nbFrames);
 			nbFrames = 0;
 			lastTime += 1.0;
@@ -169,15 +192,7 @@ void Game::loop() {
 		update();
 		render();
 
-		if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
-			scene->load_location1();
-		}
-		if(glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
-			scene->load_start_location();
-		}
-
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-
 	}
 }

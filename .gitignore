@@ -1,5 +1,5 @@
 .vscode
-base
+game
 core
 debug
 *.o
