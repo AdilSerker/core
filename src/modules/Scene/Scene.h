@@ -10,8 +10,9 @@
 #include "../LightDirectional.h"
 #include "../Shader.h"
 
-class Scene {
-    public:
+class Scene
+{
+  public:
     Scene();
     ~Scene();
 
@@ -19,8 +20,9 @@ class Scene {
     void add_character(Character *character);
     void load_start_location();
     void load_location1();
+    void load_test_location();
 
-    private:
+  private:
     Shader *shader;
     Character *character;
     Heightmap *heightmap;

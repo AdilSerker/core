@@ -82,6 +82,11 @@ void Game::gl_init()
 		{
 			pw->scene->load_start_location();
 		}
+
+		if (codepoint == 50)
+		{
+			pw->scene->load_test_location();
+		}
 	});
 
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

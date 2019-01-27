@@ -24,6 +24,9 @@ game: src/modules/Game.cpp
 scene: src/modules/Scene/Scene.cpp
 	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
 
+hm: src/modules/Scene/Heightmap.cpp
+	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
+
 character: src/modules/Character/Character.cpp
 	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
 
