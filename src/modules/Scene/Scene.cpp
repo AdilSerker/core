@@ -3,7 +3,7 @@
 Scene::Scene()
 {
 	this->shader = new Shader();
-	shader->load("./shaders/terrain.vs", "./shaders/terrain_low.fs");
+	shader->load("./shaders/terrain.vs", "./shaders/terrain.fs");
 
 	this->heightmap = new Heightmap();
 	this->areas = new Areas();
@@ -149,9 +149,9 @@ void Scene::load_location1()
 void Scene::load_test_location()
 {
 
-	heightmap->load("./heightmaps/test_ds.txt", 7.0);
+	heightmap->load("./heightmaps/test_ds.txt", 20.0);
 
 	areas->clear();
 
-	character->reset_position(glm::vec2(300, 0), heightmap, areas);
+	character->reset_position(glm::vec2(0, 0), heightmap, areas);
 }

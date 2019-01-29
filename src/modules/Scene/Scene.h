@@ -13,20 +13,20 @@
 class Scene
 {
   public:
-    Scene();
-    ~Scene();
+	Scene();
+	~Scene();
 
-    void draw(LightDirectional *light, CameraOrbit *camera);
-    void add_character(Character *character);
-    void load_start_location();
-    void load_location1();
-    void load_test_location();
+	void draw(LightDirectional *light, CameraOrbit *camera);
+	void add_character(Character *character);
+	void load_start_location();
+	void load_location1();
+	void load_test_location();
 
   private:
-    Shader *shader;
-    Character *character;
-    Heightmap *heightmap;
-    Areas *areas;
+	Shader *shader;
+	Character *character;
+	Heightmap *heightmap;
+	Areas *areas;
 };
 
 #endif // !SCENE_H

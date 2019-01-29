@@ -63,6 +63,8 @@ void Game::gl_init()
 		exit(-1);
 	}
 
+	glfwSetWindowPos(window, 300, 300);
+
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -104,6 +106,21 @@ void Game::update()
 	glfwSetCursorPos(window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
 	camera->update(xpos, ypos);
+	float distance = glm::length(camera->target - character->getPosition());
+
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	{
+		if (distance > 100)
+		{
+			glm::vec3 new_target = glm::normalize(character->getPosition() - camera->target) * (distance - 100);
+
+			camera->target += new_target;
+		}
+	}
+	else
+	{
+		camera->target = glm::mix(camera->target, character->getPosition(), 0.1);
+	}
 
 	glm::vec2 direction_velocity = glm::vec2();
 	int vel = -32768;
@@ -117,6 +134,7 @@ void Game::update()
 
 void Game::get_input_keyboard(glm::vec2 *direction_velocity, int *vel, int *strafe, bool *is_crouched)
 {
+	*strafe += 65535;
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
@@ -125,6 +143,10 @@ void Game::get_input_keyboard(glm::vec2 *direction_velocity, int *vel, int *stra
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
 		direction_velocity->x += 32768;
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_W) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_S) != GLFW_PRESS)
+		{
+			direction_velocity->y += 12000;
+		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
@@ -133,14 +155,15 @@ void Game::get_input_keyboard(glm::vec2 *direction_velocity, int *vel, int *stra
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
 		direction_velocity->x -= 32768;
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_W) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_S) != GLFW_PRESS)
+		{
+			direction_velocity->y += 12000;
+		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{
 		*vel += 65535;
-	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
-	{
-		*strafe += 65535;
+		*strafe -= 65535;
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 	{
@@ -150,20 +173,12 @@ void Game::get_input_keyboard(glm::vec2 *direction_velocity, int *vel, int *stra
 
 void Game::render()
 {
-	float distance = glm::length(camera->target - character->getPosition());
-
-	if (distance > 100)
-	{
-		glm::vec3 new_target = glm::normalize(character->getPosition() - camera->target) * (distance - 100);
-
-		camera->target += new_target;
-	}
-
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
 	glClearDepth(1.0);
-	glClearColor(1.0, 1.0, 1.0, 1.0);
+	// glClearColor(1.0, 1.0, 1.0, 1.0);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	scene->draw(light, camera);
@@ -190,6 +205,11 @@ void Game::loop()
 			printf("FPS: %i\n", nbFrames);
 			nbFrames = 0;
 			lastTime += 1.0;
+
+			cout << "camera pos.x " << camera->position().x << "\n"
+				 << "camera pos.y " << camera->position().y << "\n"
+				 << "camera pos.z " << camera->position().z
+				 << endl;
 		}
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

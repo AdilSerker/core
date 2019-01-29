@@ -3,9 +3,11 @@
 
 #include "LightDirectional.h"
 
-LightDirectional::LightDirectional() {
+LightDirectional::LightDirectional()
+{
     target = glm::vec3(0);
-    position = glm::vec3(3000, 3700, 1500);
+    // position = glm::vec3(3000, 3700, 1500);
+    position = glm::vec3(0, 1000, 5000);
     fbo = 0;
     buf = 0;
     tex = 0;
@@ -14,19 +16,19 @@ LightDirectional::LightDirectional() {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
-    
+
     glGenRenderbuffers(1, &buf);
     glBindRenderbuffer(GL_RENDERBUFFER, buf);
-  
+
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 1024);
-  
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, buf);  
-    
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, buf);
+
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
-  
+
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-  
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -37,12 +39,11 @@ LightDirectional::LightDirectional() {
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-      
 }
-  
-LightDirectional::~LightDirectional() {
+
+LightDirectional::~LightDirectional()
+{
     glDeleteBuffers(1, &fbo);
     glDeleteBuffers(1, &buf);
     glDeleteTextures(1, &tex);
 }
-
