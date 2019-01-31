@@ -1,9 +1,10 @@
 #include "Trajectory.h"
 
-glm::vec3 Trajectory::get_center_position() {
+glm::vec3 Trajectory::get_center_position()
+{
 	return glm::vec3(
 		positions[LENGTH / 2].x,
-		heights[LENGTH / 2] + 100,
+		heights[LENGTH / 2] + 150,
 		positions[LENGTH / 2].z);
 }
 
@@ -49,14 +50,16 @@ void Trajectory::update_gait(int vel, float crouched_amount, float extra_gait_sm
 	}
 }
 
-void Trajectory::predict(float responsive, float strafe_amount, Areas *areas) {
+void Trajectory::predict(float responsive, float strafe_amount, Areas *areas)
+{
 	predict_trajectory(responsive, strafe_amount, areas);
 	predict_jump(areas),
-	predict_crouch(areas),
-	predict_wall(areas);
+		predict_crouch(areas),
+		predict_wall(areas);
 }
 
-void Trajectory::predict_trajectory(float responsive, float strafe_amount, Areas *areas) {
+void Trajectory::predict_trajectory(float responsive, float strafe_amount, Areas *areas)
+{
 	glm::vec3 trajectory_positions_blend[LENGTH];
 	trajectory_positions_blend[LENGTH / 2] = positions[LENGTH / 2];
 
@@ -70,9 +73,9 @@ void Trajectory::predict_trajectory(float responsive, float strafe_amount, Areas
 		float scale_dir = (1.0f - powf(1.0f - ((float)(i - LENGTH / 2) / (LENGTH / 2)), bias_dir));
 
 		trajectory_positions_blend[i] = trajectory_positions_blend[i - 1] + glm::mix(
-			positions[i] - positions[i - 1],
-			target_vel,
-			scale_pos);
+																				positions[i] - positions[i - 1],
+																				target_vel,
+																				scale_pos);
 
 		/* Collide with walls */
 		for (int j = 0; j < areas->num_walls(); j++)
@@ -112,7 +115,8 @@ void Trajectory::predict_trajectory(float responsive, float strafe_amount, Areas
 	}
 }
 
-void Trajectory::predict_jump(Areas *areas) {
+void Trajectory::predict_jump(Areas *areas)
+{
 	for (int i = LENGTH / 2; i < LENGTH; i++)
 	{
 		gait_jump[i] = 0.0;
@@ -124,7 +128,8 @@ void Trajectory::predict_jump(Areas *areas) {
 	}
 }
 
-void Trajectory::predict_crouch(Areas *areas) {
+void Trajectory::predict_crouch(Areas *areas)
+{
 	for (int i = LENGTH / 2; i < LENGTH; i++)
 	{
 		for (int j = 0; j < areas->num_crouches(); j++)
@@ -133,16 +138,17 @@ void Trajectory::predict_crouch(Areas *areas) {
 			float dist_z = abs(positions[i].z - areas->crouch_pos[j].z);
 			float height = (sinf(positions[i].x / Areas::CROUCH_WAVE) + 1.0) / 2.0;
 			gait_crouch[i] = glm::mix(1.0f - height, gait_crouch[i],
-													glm::clamp(
-														((dist_x - (areas->crouch_size[j].x / 2)) +
-														(dist_z - (areas->crouch_size[j].y / 2))) /
-															100.0f,
-														0.0f, 1.0f));
+									  glm::clamp(
+										  ((dist_x - (areas->crouch_size[j].x / 2)) +
+										   (dist_z - (areas->crouch_size[j].y / 2))) /
+											  100.0f,
+										  0.0f, 1.0f));
 		}
 	}
 }
 
-void Trajectory::predict_wall(Areas *areas) {
+void Trajectory::predict_wall(Areas *areas)
+{
 	for (int i = 0; i < LENGTH; i++)
 	{
 		gait_bump[i] = 0.0;
@@ -157,16 +163,16 @@ void Trajectory::predict_wall(Areas *areas) {
 }
 
 void Trajectory::input(Heightmap *heightmap, int JOINT_NUM,
-	glm::vec3 *root_position, glm::mat3 *root_rotation,
-	glm::vec3 *joint_positions,
-	glm::vec3 *joint_velocities)
+					   glm::vec3 *root_position, glm::mat3 *root_rotation,
+					   glm::vec3 *joint_positions,
+					   glm::vec3 *joint_velocities)
 {
 	for (int i = 0; i < LENGTH; i++)
 	{
 		rotations[i] = mat3(rotate(atan2f(
-			directions[i].x,
-			directions[i].z),
-		vec3(0, 1, 0)));
+									   directions[i].x,
+									   directions[i].z),
+								   vec3(0, 1, 0)));
 	}
 
 	for (int i = LENGTH / 2; i < LENGTH; i++)
@@ -227,7 +233,6 @@ void Trajectory::input(Heightmap *heightmap, int JOINT_NUM,
 	}
 }
 
-
 void Trajectory::input_position(vec3 pos, int w, int i)
 {
 	pfnn->Xp((w * 0) + i / 10) = pos.x;
@@ -282,7 +287,8 @@ vec3 Trajectory::getRotation(int orot, int i)
 	return vec3(pfnn->Yp(orot + i * 3 + 0), pfnn->Yp(orot + i * 3 + 1), pfnn->Yp(orot + i * 3 + 2));
 }
 
-void Trajectory::post_update(float *phase, Areas *areas) {
+void Trajectory::post_update(float *phase, Areas *areas)
+{
 	update_past();
 
 	float stand_amount = powf(1.0f - gait_stand[LENGTH / 2], 0.25f);
@@ -331,9 +337,9 @@ void Trajectory::update_current(float stand_amount)
 	positions[LENGTH / 2] = positions[LENGTH / 2] + stand_amount * trajectory_update;
 	directions[LENGTH / 2] = glm::mat3(glm::rotate(stand_amount * -pfnn->Yp(2), glm::vec3(0, 1, 0))) * directions[LENGTH / 2];
 	rotations[LENGTH / 2] = glm::mat3(glm::rotate(atan2f(
-														directions[LENGTH / 2].x,
-														directions[LENGTH / 2].z),
-													glm::vec3(0, 1, 0)));
+													  directions[LENGTH / 2].x,
+													  directions[LENGTH / 2].z),
+												  glm::vec3(0, 1, 0)));
 }
 
 void Trajectory::update_future()

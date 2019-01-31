@@ -149,7 +149,7 @@ void Scene::load_location1()
 void Scene::load_test_location()
 {
 
-	heightmap->load("./heightmaps/test_ds.txt", 20.0);
+	heightmap->load("./heightmaps/test_ds.txt", 0.33);
 
 	areas->clear();
 

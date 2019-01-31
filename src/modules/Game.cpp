@@ -108,18 +108,11 @@ void Game::update()
 	camera->update(xpos, ypos);
 	float distance = glm::length(camera->target - character->getPosition());
 
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	if (distance > 100)
 	{
-		if (distance > 100)
-		{
-			glm::vec3 new_target = glm::normalize(character->getPosition() - camera->target) * (distance - 100);
+		glm::vec3 new_target = glm::normalize(character->getPosition() - camera->target) * (distance - 100);
 
-			camera->target += new_target;
-		}
-	}
-	else
-	{
-		camera->target = glm::mix(camera->target, character->getPosition(), 0.1);
+		camera->target += new_target;
 	}
 
 	glm::vec2 direction_velocity = glm::vec2();
@@ -134,7 +127,6 @@ void Game::update()
 
 void Game::get_input_keyboard(glm::vec2 *direction_velocity, int *vel, int *strafe, bool *is_crouched)
 {
-	*strafe += 65535;
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
@@ -143,10 +135,6 @@ void Game::get_input_keyboard(glm::vec2 *direction_velocity, int *vel, int *stra
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
 		direction_velocity->x += 32768;
-		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_W) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_S) != GLFW_PRESS)
-		{
-			direction_velocity->y += 12000;
-		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
@@ -155,15 +143,15 @@ void Game::get_input_keyboard(glm::vec2 *direction_velocity, int *vel, int *stra
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
 		direction_velocity->x -= 32768;
-		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_W) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_S) != GLFW_PRESS)
-		{
-			direction_velocity->y += 12000;
-		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{
 		*vel += 65535;
-		*strafe -= 65535;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
+	{
+		*strafe += 65535;
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 	{

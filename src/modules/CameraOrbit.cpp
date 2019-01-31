@@ -12,7 +12,7 @@ CameraOrbit::CameraOrbit()
 	pitch = M_PI / 6;
 	yaw = 0;
 	target = glm::vec3(0);
-	distance = 150;
+	distance = 300;
 
 	invert_y = -1;
 }
@@ -46,5 +46,5 @@ glm::mat4 CameraOrbit::view_matrix()
 
 glm::mat4 CameraOrbit::proj_matrix()
 {
-	return glm::perspective(45.0f, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 1.0f, 100000.0f);
+	return glm::perspective(45.0f, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 1.0f, 1000.0f);
 }
