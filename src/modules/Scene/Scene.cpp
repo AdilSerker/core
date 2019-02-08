@@ -1,12 +1,20 @@
 #include "Scene.h"
 
+#include <iostream>
+
+using namespace std;
+
 Scene::Scene()
 {
 	this->shader = new Shader();
-	shader->load("./shaders/terrain.vs", "./shaders/terrain.fs");
+	shader->load("./shaders/phong.vert", "./shaders/phong.frag");
 
 	this->heightmap = new Heightmap();
 	this->areas = new Areas();
+
+	glUniform1f(glGetUniformLocation(shader->program, "Fog.maxDist"), 70.0f);
+	glUniform1f(glGetUniformLocation(shader->program, "Fog.minDist"), 1.0f);
+	glUniform3f(glGetUniformLocation(shader->program, "Fog.color"), 0.5f, 0.5f, 0.5f);
 }
 
 Scene::~Scene()
@@ -18,45 +26,36 @@ Scene::~Scene()
 
 void Scene::draw(LightDirectional *light, CameraOrbit *camera)
 {
-	glm::mat4 light_view = glm::lookAt(camera->target + light->position, camera->target, glm::vec3(0, 1, 0));
-	glm::mat4 light_proj = glm::ortho(-500.0f, 500.0f, -500.0f, 500.0f, 10.0f, 10000.0f);
-
-	glm::vec3 light_direction = glm::normalize(light->target - light->position);
-
 	glUseProgram(shader->program);
 
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, glm::value_ptr(camera->view_matrix()));
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "proj"), 1, GL_FALSE, glm::value_ptr(camera->proj_matrix()));
-	glUniform3f(glGetUniformLocation(shader->program, "light_dir"), light_direction.x, light_direction.y, light_direction.z);
+	glm::mat4 proj = camera->proj_matrix();
+	glm::mat4 view = camera->view_matrix();
 
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "light_view"), 1, GL_FALSE, glm::value_ptr(light_view));
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "light_proj"), 1, GL_FALSE, glm::value_ptr(light_proj));
+	glUniformMatrix4fv(glGetUniformLocation(shader->program, "Light.position"), 1, GL_FALSE, glm::value_ptr(view * glm::vec4(0.0f, 100.0f, 100.0f, 0.0f)));
+	glUniform3f(glGetUniformLocation(shader->program, "Light.intensity"), 0.8f, 0.8f, 0.8f);
 
-	glActiveTexture(GL_TEXTURE0 + 0);
-	glBindTexture(GL_TEXTURE_2D, light->tex);
-	glUniform1i(glGetUniformLocation(shader->program, "shadows"), 0);
+	glUniform3f(glGetUniformLocation(shader->program, "Kd"), 0.8f, 0.2f, 0.2f);
+	glUniform3f(glGetUniformLocation(shader->program, "Ks"), 0.9f, 0.9f, 0.9f);
+	glUniform3f(glGetUniformLocation(shader->program, "Ka"), 0.1f, 0.1f, 0.1f);
+	glUniform1f(glGetUniformLocation(shader->program, "Shininess"), 180.0f);
 
-	glBindBuffer(GL_ARRAY_BUFFER, heightmap->vbo);
+	glm::mat4 model = glm::mat4(1.0f);
+	glm::mat4 mv = view * model;
 
-	glEnableVertexAttribArray(glGetAttribLocation(shader->program, "vPosition"));
-	glEnableVertexAttribArray(glGetAttribLocation(shader->program, "vNormal"));
-	glEnableVertexAttribArray(glGetAttribLocation(shader->program, "vAO"));
-
-	glVertexAttribPointer(glGetAttribLocation(shader->program, "vPosition"), 3, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (void *)(sizeof(float) * 0));
-	glVertexAttribPointer(glGetAttribLocation(shader->program, "vNormal"), 3, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (void *)(sizeof(float) * 3));
-	glVertexAttribPointer(glGetAttribLocation(shader->program, "vAO"), 1, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (void *)(sizeof(float) * 6));
+	glUniformMatrix4fv(glGetUniformLocation(shader->program, "ModelViewMatrix"), 1, GL_FALSE, glm::value_ptr(mv));
+	glUniformMatrix3fv(glGetUniformLocation(shader->program, "NormalMatrix"),
+					   1, GL_FALSE, glm::value_ptr(glm::mat3(glm::vec3(mv[0]), glm::vec3(mv[1]), glm::vec3(mv[2]))));
+	glUniformMatrix4fv(glGetUniformLocation(shader->program, "MVP"), 1, GL_FALSE, glm::value_ptr(proj * mv));
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, heightmap->tbo);
+	// Position
+	glBindBuffer(GL_ARRAY_BUFFER, heightmap->vbo);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (void *)(sizeof(float) * 0));
+	glEnableVertexAttribArray(0); // Vertex position
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (void *)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
 
 	glDrawElements(GL_TRIANGLES, ((heightmap->data.size() - 1) / 2) * ((heightmap->data[0].size() - 1) / 2) * 2 * 3, GL_UNSIGNED_INT, (void *)0);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	glDisableVertexAttribArray(glGetAttribLocation(shader->program, "vPosition"));
-	glDisableVertexAttribArray(glGetAttribLocation(shader->program, "vNormal"));
-	glDisableVertexAttribArray(glGetAttribLocation(shader->program, "vAO"));
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glUseProgram(0);
 }
@@ -68,8 +67,9 @@ void Scene::add_character(Character *character)
 
 void Scene::load_start_location()
 {
-
 	heightmap->load("./heightmaps/hmap_013_smooth.txt", 1.0);
+	cout << "loaded hm"
+		 << "\n";
 
 	areas->clear();
 	areas->add_wall(glm::vec2(1225, -1000), glm::vec2(1225, 1000), 20);

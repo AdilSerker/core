@@ -1,5 +1,8 @@
 #include "Game.h"
 
+#include <iostream>
+
+using namespace std;
 #include <GLFW/glfw3.h>
 extern GLFWwindow *window;
 
@@ -18,14 +21,20 @@ Game::~Game()
 void Game::init()
 {
 	gl_init();
-
+	cout << "Gl inited"
+		 << "\n";
 	this->camera = new CameraOrbit();
 	this->light = new LightDirectional();
 	this->character = new Character();
 	this->scene = new Scene();
-
+	cout << "entities inited"
+		 << "\n";
 	scene->add_character(character);
+	cout << "char inited"
+		 << "\n";
 	scene->load_start_location();
+	cout << "scene inited"
+		 << "\n";
 }
 
 void Game::gl_init()
@@ -63,7 +72,7 @@ void Game::gl_init()
 		exit(-1);
 	}
 
-	glfwSetWindowPos(window, 300, 300);
+	glfwSetWindowPos(window, 300, 100);
 
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
@@ -165,12 +174,12 @@ void Game::render()
 	glEnable(GL_CULL_FACE);
 
 	glClearDepth(1.0);
-	// glClearColor(1.0, 1.0, 1.0, 1.0);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearColor(0.54f, 0.89f, 1.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	scene->draw(light, camera);
-	character->draw(light, camera);
+
+	// character->draw(light, camera);
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
@@ -199,8 +208,6 @@ void Game::loop()
 				 << "camera pos.z " << camera->position().z
 				 << endl;
 		}
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		update();
 		render();

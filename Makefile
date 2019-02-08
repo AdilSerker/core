@@ -9,11 +9,13 @@ MODULE = src/modules/*.cpp src/modules/**/*.cpp
 WFLAGS = -Wall 
 CFLAGS = -O3 -ffast-math
 
+DBG = -g -rdynamic
+
 base: src/main.cpp 
 	rm -f game && g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(MODULE) $(LFLAGS) -o game
 
 debug: src/main.cpp 
-	g++ -std=gnu++11 $(WFLAGS) $< $(MODULE) -g -c
+	g++ -std=gnu++11 $(DBG) $(WFLAGS) $< $(MODULE)  $(LFLAGS) -g -o debug
 
 all: src/main.cpp 
 	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(MODULE) -c
