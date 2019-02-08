@@ -25,7 +25,6 @@ void Game::init()
 	this->scene = new Scene();
 
 	scene->add_character(character);
-	scene->load_start_location();
 }
 
 void Game::gl_init()
@@ -63,7 +62,7 @@ void Game::gl_init()
 		exit(-1);
 	}
 
-	glfwSetWindowPos(window, 300, 300);
+	glfwSetWindowPos(window, 300, 100);
 
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
@@ -75,20 +74,20 @@ void Game::gl_init()
 
 		// std::cout << codepoint << std::endl;
 
-		if (codepoint == 49)
-		{
-			pw->scene->load_location1();
-		}
+		// if (codepoint == 49)
+		// {
+		// 	pw->scene->load_location1();
+		// }
 
-		if (codepoint == 48)
-		{
-			pw->scene->load_start_location();
-		}
+		// if (codepoint == 48)
+		// {
+		// 	pw->scene->load_start_location();
+		// }
 
-		if (codepoint == 50)
-		{
-			pw->scene->load_test_location();
-		}
+		// if (codepoint == 50)
+		// {
+		// 	pw->scene->load_test_location();
+		// }
 	});
 
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -166,7 +165,7 @@ void Game::render()
 
 	glClearDepth(1.0);
 	// glClearColor(1.0, 1.0, 1.0, 1.0);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearColor(0.54f, 0.89f, 1.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	scene->draw(light, camera);

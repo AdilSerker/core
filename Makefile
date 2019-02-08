@@ -5,33 +5,36 @@ ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	EXT = 
 endif
 
+INC = -I inc
+
 MODULE = src/modules/*.cpp src/modules/**/*.cpp
 WFLAGS = -Wall 
 CFLAGS = -O3 -ffast-math
+DBG = -g -rdynamic
 
 base: src/main.cpp 
-	rm -f game && g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(MODULE) $(LFLAGS) -o game
+	rm -f game && g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(MODULE) $(INC) $(LFLAGS) -o game
 
 debug: src/main.cpp 
-	g++ -std=gnu++11 $(WFLAGS) $< $(MODULE) -g -c
+	g++ -std=gnu++11 $(WFLAGS) $(DBG) $< $(MODULE) $(INC) -c
 
 all: src/main.cpp 
-	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(MODULE) -c
+	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(MODULE) $(INC) -c && make build
 
 game: src/modules/Game.cpp
-	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
+	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(INC) -c && make build
 
 scene: src/modules/Scene/Scene.cpp
-	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
+	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(INC) -c && make build
 
 hm: src/modules/Scene/Heightmap.cpp
-	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
+	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(INC) -c && make build
 
 character: src/modules/Character/Character.cpp
-	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< -c
+	g++ -std=gnu++11 $(CFLAGS) $(WFLAGS) $< $(INC) -c && make build
 
 build: 
-	rm -f core && g++ ./*.o $(LFLAGS) -o game
+	rm -f core && g++ ./*.o $(LFLAGS) $(INC) -o game
 
 clean:
 	rm -f core game ./*.o

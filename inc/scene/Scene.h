@@ -4,15 +4,15 @@
 #include "Heightmap.h"
 #include "Areas.h"
 
-#include "../Character/Character.h"
+#include "character/Character.h"
 
-#include "../CameraOrbit.h"
-#include "../LightDirectional.h"
-#include "../Shader.h"
+#include "CameraOrbit.h"
+#include "LightDirectional.h"
+#include "Shader.h"
 
 class Scene
 {
-  public:
+public:
 	Scene();
 	~Scene();
 
@@ -22,7 +22,7 @@ class Scene
 	void load_location1();
 	void load_test_location();
 
-  private:
+private:
 	Shader *shader;
 	Character *character;
 	Heightmap *heightmap;

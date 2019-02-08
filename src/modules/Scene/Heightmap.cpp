@@ -1,52 +1,32 @@
-#include "Heightmap.h"
+#include "scene/Heightmap.h"
 
-Heightmap::Heightmap()
+void Heightmap::deleteBuffers()
 {
-	hscale = 3.937007874;
-	vscale = 3.0;
-	offset = 0.0;
-	vbo = 0;
-	tbo = 0;
+	if (buffers.size() > 0)
+	{
+		glDeleteBuffers((GLsizei)buffers.size(), buffers.data());
+		buffers.clear();
+	}
+
+	if (vao != 0)
+	{
+		glDeleteVertexArrays(1, &vao);
+		vao = 0;
+	}
 }
 
 Heightmap::~Heightmap()
 {
-	if (vbo != 0)
-	{
-		glDeleteBuffers(1, &vbo);
-		vbo = 0;
-	}
-	if (tbo != 0)
-	{
-		glDeleteBuffers(1, &tbo);
-		tbo = 0;
-	}
+	deleteBuffers();
 }
 
-void Heightmap::load(const char *filename, float multiplier)
+Heightmap::Heightmap(const char *filename, float multiplier)
 {
-
 	hscale = 3.937007874;
 	vscale = 3.0;
 
 	vscale = multiplier * vscale;
 	hscale = multiplier * hscale;
-
-	if (vbo != 0)
-	{
-		glDeleteBuffers(1, &vbo);
-		vbo = 0;
-	}
-	if (tbo != 0)
-	{
-		glDeleteBuffers(1, &tbo);
-		tbo = 0;
-	}
-
-	glGenBuffers(1, &vbo);
-	glGenBuffers(1, &tbo);
-
-	data.clear();
 
 	std::ifstream file(filename);
 
@@ -75,11 +55,10 @@ void Heightmap::load(const char *filename, float multiplier)
 		}
 	offset /= w * h;
 
-	printf("Loaded Heightmap '%s' (%i %i)\n", filename, (int)w, (int)h);
+	printf("Loaded Heightmap '%s' (%i %i)\normals", filename, (int)w, (int)h);
 
 	glm::vec3 *posns = (glm::vec3 *)malloc(sizeof(glm::vec3) * w * h);
 	glm::vec3 *norms = (glm::vec3 *)malloc(sizeof(glm::vec3) * w * h);
-	float *aos = (float *)malloc(sizeof(float) * w * h);
 
 	for (int x = 0; x < w; x++)
 		for (int y = 0; y < h; y++)
@@ -91,112 +70,101 @@ void Heightmap::load(const char *filename, float multiplier)
 	for (int x = 0; x < w; x++)
 		for (int y = 0; y < h; y++)
 		{
-			norms[x + y * w] = (x > 0 && x < w - 1 && y > 0 && y < h - 1) ? glm::normalize(glm::mix(
-																				glm::cross(
-																					posns[(x + 0) + (y + 1) * w] - posns[x + y * w],
-																					posns[(x + 1) + (y + 0) * w] - posns[x + y * w]),
-																				glm::cross(
-																					posns[(x + 0) + (y - 1) * w] - posns[x + y * w],
-																					posns[(x - 1) + (y + 0) * w] - posns[x + y * w]),
-																				0.5))
-																		  : glm::vec3(0, 1, 0);
+			norms[x + y * w] =
+				(x > 0 && x < w - 1 && y > 0 && y < h - 1)
+					? glm::normalize(glm::mix(
+						  glm::cross(
+							  posns[(x + 0) + (y + 1) * w] - posns[x + y * w],
+							  posns[(x + 1) + (y + 0) * w] - posns[x + y * w]),
+						  glm::cross(
+							  posns[(x + 0) + (y - 1) * w] - posns[x + y * w],
+							  posns[(x - 1) + (y + 0) * w] - posns[x + y * w]),
+						  0.5))
+					: glm::vec3(0, 1, 0);
 		}
 
-	char ao_filename[512];
-	memcpy(ao_filename, filename, strlen(filename) - 4);
-	ao_filename[strlen(filename) - 4] = '\0';
-	strcat(ao_filename, "_ao.txt");
+	std::vector<GLfloat> points(3 * w * h);
+	std::vector<GLfloat> normals(3 * w * h);
+	std::vector<GLuint> indices(3 * 2 * ((w - 1) / 2) * ((h - 1) / 2));
 
-	srand(0);
+	// float *vbo_data = (float *)malloc(sizeof(float) * 3 * w * h);
+	// float *normals = (float *)malloc(sizeof(float) * 3 * w * h);
+	// uint32_t *tbo_data = (uint32_t *)malloc(sizeof(uint32_t) * 3 * 2 * ((w - 1) / 2) * ((h - 1) / 2));
 
-	FILE *ao_file = fopen(ao_filename, "r");
-	bool ao_generate = false;
-	if (ao_file == NULL || ao_generate)
-	{
-		ao_file = fopen(ao_filename, "w");
-		//ao_generate = true;
-	}
-
+	int vidx = 0;
 	for (int x = 0; x < w; x++)
 		for (int y = 0; y < h; y++)
 		{
+			points[vidx] = posns[x + y * w].x;
+			points[vidx + 1] = posns[x + y * w].y;
+			points[vidx + 2] = posns[x + y * w].z;
+			normals[vidx] = norms[x + y * w].x;
+			normals[vidx + 1] = norms[x + y * w].y;
+			normals[vidx + 2] = norms[x + y * w].z;
 
-			if (ao_generate)
-			{
-
-				float ao_amount = 0.0;
-				float ao_radius = 50.0;
-				int ao_samples = 1024;
-				int ao_steps = 5;
-				for (int i = 0; i < ao_samples; i++)
-				{
-					glm::vec3 off = glm::normalize(glm::vec3(rand() % 10000 - 5000, rand() % 10000 - 5000, rand() % 10000 - 5000));
-					if (glm::dot(off, norms[x + y * w]) < 0.0f)
-					{
-						off = -off;
-					}
-					for (int j = 1; j <= ao_steps; j++)
-					{
-						glm::vec3 next = posns[x + y * w] + (((float)j) / ao_steps) * ao_radius * off;
-						if (sample(glm::vec2(next.x, next.z)) > next.y)
-						{
-							ao_amount += 1.0;
-							break;
-						}
-					}
-				}
-
-				aos[x + y * w] = 1.0 - (ao_amount / ao_samples);
-				fprintf(ao_file, y == h - 1 ? "%f\n" : "%f ", aos[x + y * w]);
-			}
-			else
-			{
-				fscanf(ao_file, y == h - 1 ? "%f\n" : "%f ", &aos[x + y * w]);
-			}
-		}
-
-	fclose(ao_file);
-
-	float *vbo_data = (float *)malloc(sizeof(float) * 7 * w * h);
-
-	uint32_t *tbo_data = (uint32_t *)malloc(sizeof(uint32_t) * 3 * 2 * ((w - 1) / 2) * ((h - 1) / 2));
-
-	for (int x = 0; x < w; x++)
-		for (int y = 0; y < h; y++)
-		{
-			vbo_data[x * 7 + y * 7 * w + 0] = posns[x + y * w].x;
-			vbo_data[x * 7 + y * 7 * w + 1] = posns[x + y * w].y;
-			vbo_data[x * 7 + y * 7 * w + 2] = posns[x + y * w].z;
-			vbo_data[x * 7 + y * 7 * w + 3] = norms[x + y * w].x;
-			vbo_data[x * 7 + y * 7 * w + 4] = norms[x + y * w].y;
-			vbo_data[x * 7 + y * 7 * w + 5] = norms[x + y * w].z;
-			vbo_data[x * 7 + y * 7 * w + 6] = aos[x + y * w];
+			vidx += 3;
 		}
 
 	free(posns);
 	free(norms);
-	free(aos);
 
 	for (int x = 0; x < (w - 1) / 2; x++)
 		for (int y = 0; y < (h - 1) / 2; y++)
 		{
-			tbo_data[x * 3 * 2 + y * 3 * 2 * ((w - 1) / 2) + 0] = (x * 2 + 0) + (y * 2 + 0) * w;
-			tbo_data[x * 3 * 2 + y * 3 * 2 * ((w - 1) / 2) + 1] = (x * 2 + 0) + (y * 2 + 2) * w;
-			tbo_data[x * 3 * 2 + y * 3 * 2 * ((w - 1) / 2) + 2] = (x * 2 + 2) + (y * 2 + 0) * w;
-			tbo_data[x * 3 * 2 + y * 3 * 2 * ((w - 1) / 2) + 3] = (x * 2 + 2) + (y * 2 + 2) * w;
-			tbo_data[x * 3 * 2 + y * 3 * 2 * ((w - 1) / 2) + 4] = (x * 2 + 2) + (y * 2 + 0) * w;
-			tbo_data[x * 3 * 2 + y * 3 * 2 * ((w - 1) / 2) + 5] = (x * 2 + 0) + (y * 2 + 2) * w;
+			indices[x * 3 * 2 + y * 3 * 2 * ((w - 1) / 2) + 0] = (x * 2 + 0) + (y * 2 + 0) * w;
+			indices[x * 3 * 2 + y * 3 * 2 * ((w - 1) / 2) + 1] = (x * 2 + 0) + (y * 2 + 2) * w;
+			indices[x * 3 * 2 + y * 3 * 2 * ((w - 1) / 2) + 2] = (x * 2 + 2) + (y * 2 + 0) * w;
+			indices[x * 3 * 2 + y * 3 * 2 * ((w - 1) / 2) + 3] = (x * 2 + 2) + (y * 2 + 2) * w;
+			indices[x * 3 * 2 + y * 3 * 2 * ((w - 1) / 2) + 4] = (x * 2 + 2) + (y * 2 + 0) * w;
+			indices[x * 3 * 2 + y * 3 * 2 * ((w - 1) / 2) + 5] = (x * 2 + 0) + (y * 2 + 2) * w;
 		}
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 7 * w * h, vbo_data, GL_STATIC_DRAW);
+	initBuffers(&indices, &points, &normals);
+}
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tbo);
+void Heightmap::initBuffers(
+	std::vector<GLuint> *indices,
+	std::vector<GLfloat> *points,
+	std::vector<GLfloat> *normals)
+{
+	// Must have data for indices, points, and normals
+	if (indices == nullptr || points == nullptr || normals == nullptr)
+		return;
 
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * 3 * 2 * ((w - 1) / 2) * ((h - 1) / 2), tbo_data, GL_STATIC_DRAW);
+	nVerts = (GLuint)indices->size();
 
-	free(vbo_data);
-	free(tbo_data);
+	GLuint indexBuf = 0, posBuf = 0, normBuf = 0, tcBuf = 0, tangentBuf = 0;
+	glGenBuffers(1, &indexBuf);
+	buffers.push_back(indexBuf);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuf);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices->size() * sizeof(GLuint), indices->data(), GL_STATIC_DRAW);
+
+	glGenBuffers(1, &posBuf);
+	buffers.push_back(posBuf);
+	glBindBuffer(GL_ARRAY_BUFFER, posBuf);
+	glBufferData(GL_ARRAY_BUFFER, points->size() * sizeof(GLfloat), points->data(), GL_STATIC_DRAW);
+
+	glGenBuffers(1, &normBuf);
+	buffers.push_back(normBuf);
+	glBindBuffer(GL_ARRAY_BUFFER, normBuf);
+	glBufferData(GL_ARRAY_BUFFER, normals->size() * sizeof(GLfloat), normals->data(), GL_STATIC_DRAW);
+
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuf);
+
+	// Position
+	glBindBuffer(GL_ARRAY_BUFFER, posBuf);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0); // Vertex position
+
+	// Normal
+	glBindBuffer(GL_ARRAY_BUFFER, normBuf);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1); // Normal
+
+	glBindVertexArray(0);
 }
 
 float Heightmap::sample(glm::vec2 pos)
@@ -229,4 +197,28 @@ float Heightmap::sample(glm::vec2 pos)
 	float s3 = vscale * (data[x1][y1] - offset);
 
 	return (s0 * (1 - a0) + s1 * a0) * (1 - a1) + (s2 * (1 - a0) + s3 * a0) * a1;
+}
+
+void Heightmap::render(Shader *shader, glm::mat4 view, glm::mat4 proj)
+{
+	if (vao == 0)
+		return;
+
+	glBindVertexArray(vao);
+
+	shader->setUniform("Kd", 0.2f, 0.2f, 0.2f);
+	shader->setUniform("Ks", 0.9f, 0.9f, 0.9f);
+	shader->setUniform("Ka", 0.1f, 0.1f, 0.1f);
+	shader->setUniform("Shininess", 180.0f);
+
+	glm::mat4 model = glm::mat4(1.0f);
+	glm::mat4 mv = view * model;
+
+	shader->setUniform("ModelViewMatrix", mv);
+	shader->setUniform("NormalMatrix",
+					   glm::mat3(glm::vec3(mv[0]), glm::vec3(mv[1]), glm::vec3(mv[2])));
+	shader->setUniform("MVP", proj * mv);
+
+	glDrawElements(GL_TRIANGLES, nVerts, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
 }

@@ -12,21 +12,21 @@
 
 #include "Trajectory.h"
 #include "Options.h"
-#include "IK.cpp"
+#include "IK.h"
 
-#include "../Shader.h"
+#include "Shader.h"
 
-#include "../Scene/Heightmap.h"
-#include "../Scene/Areas.h"
+#include "scene/Heightmap.h"
+#include "scene/Areas.h"
 
-#include "../LightDirectional.h"
-#include "../CameraOrbit.h"
+#include "LightDirectional.h"
+#include "CameraOrbit.h"
 
 using namespace std;
 
 class Character
 {
-	public:
+  public:
 	Character();
 	~Character();
 
@@ -36,12 +36,12 @@ class Character
 	void reset_position(glm::vec2 position, Heightmap *heightmap, Areas *areas);
 	void update_move(glm::vec2 direction_velocity, glm::vec3 cam_direct, int vel, int strafe, bool is_crouched);
 
-	private:
+  private:
 	Trajectory *trajectory;
 	IK *ik;
 
-	Shader *shader;	
-	Shader *shader_shadow;	
+	Shader *shader;
+	Shader *shader_shadow;
 
 	enum
 	{
@@ -89,9 +89,9 @@ class Character
 		JOINT_HEEL_R = 9,
 		JOINT_TOE_R = 10
 	};
-	
+
 	void load(const char *filename_v, const char *filename_t, const char *filename_p, const char *filename_r);
-	
+
 	void build_local_transform();
 
 	void forward_kinematics();

@@ -1,4 +1,4 @@
-#include "Trajectory.h"
+#include "character/Trajectory.h"
 
 glm::vec3 Trajectory::get_center_position()
 {

@@ -9,16 +9,16 @@
 #include "Options.h"
 #include "PFNN.h"
 
-#include "../Scene/Areas.h"
-#include "../Scene/Heightmap.h"
+#include "scene/Areas.h"
+#include "scene/Heightmap.h"
 
-#include "../helpers.hpp"
+#include "helpers.hpp"
 
 using namespace glm;
 
 class Trajectory
 {
-	public:
+  public:
 	enum
 	{
 		LENGTH = 120
@@ -34,7 +34,8 @@ class Trajectory
 		this->pfnn = new PFNN(MODE_CONSTANT);
 	}
 
-	~Trajectory() {
+	~Trajectory()
+	{
 		delete this->pfnn;
 	}
 
@@ -47,8 +48,7 @@ class Trajectory
 	void predict(float responsive, float strafe_amount, Areas *areas);
 
 	void input(Heightmap *heightmap, int JOINT_NUM,
-		vec3 *root_position, mat3 *root_rotation, vec3 *joint_positions, vec3 *joint_velocities);
-
+			   vec3 *root_position, mat3 *root_rotation, vec3 *joint_positions, vec3 *joint_velocities);
 
 	vec3 getPosition(int opos, int i);
 	vec3 getVelocity(int ovel, int i);
@@ -56,7 +56,7 @@ class Trajectory
 
 	void post_update(float *phase, Areas *areas);
 
-	private:
+  private:
 	float width;
 
 	vec3 positions[LENGTH];
@@ -85,7 +85,6 @@ class Trajectory
 	void update_past();
 	void update_current(float stand_amount);
 	void update_future();
-
 };
 
 #endif // !TRAJECTORY_H

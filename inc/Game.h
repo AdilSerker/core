@@ -6,20 +6,19 @@
 #include "LightDirectional.h"
 #include "CameraOrbit.h"
 
-#include "Scene/Scene.h"
-#include "Character/Character.h"
+#include "scene/Scene.h"
+#include "character/Character.h"
 
-
-class Game {
-    public:
-
+class Game
+{
+  public:
     ~Game();
 
     void init();
 
     void loop();
 
-    private:
+  private:
     GLuint VertexArrayID;
 
     LightDirectional *light;

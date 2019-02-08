@@ -1,19 +1,11 @@
-#include "Character.h"
+#include "character/Character.h"
 
 Character::Character()
-	: vbo(0)
-	, tbo(0)
-	, ntri(66918)
-	, nvtx(11200)
-	, phase(0)
-	, strafe_amount(0)
-	, strafe_target(0)
-	, crouched_amount(0)
-	, crouched_target(0)
-	, responsive(0) 
+	: vbo(0), tbo(0), ntri(66918), nvtx(11200), phase(0), strafe_amount(0), strafe_target(0), crouched_amount(0), crouched_target(0), responsive(0)
 {
 	this->trajectory = new Trajectory();
 	this->ik = new IK();
+
 	this->shader = new Shader();
 	this->shader_shadow = new Shader();
 
@@ -21,13 +13,14 @@ Character::Character()
 	shader_shadow->load("./shaders/character_shadow.vs", "./shaders/character_shadow.fs");
 
 	load("./network/character_vertices.bin",
-		"./network/character_triangles.bin",
-		"./network/character_parents.bin",
-		"./network/character_xforms.bin");
+		 "./network/character_triangles.bin",
+		 "./network/character_parents.bin",
+		 "./network/character_xforms.bin");
 }
 
 Character::~Character()
 {
+
 	if (vbo != 0)
 	{
 		glDeleteBuffers(1, &vbo);
@@ -45,50 +38,51 @@ Character::~Character()
 	delete shader_shadow;
 }
 
-void Character::draw(LightDirectional *light, CameraOrbit *camera) {
+void Character::draw(LightDirectional *light, CameraOrbit *camera)
+{
 
 	glm::mat4 light_view = glm::lookAt(camera->target + light->position, camera->target, glm::vec3(0, 1, 0));
 	glm::mat4 light_proj = glm::ortho(-500.0f, 500.0f, -500.0f, 500.0f, 10.0f, 10000.0f);
 
 	glm::vec3 light_direction = glm::normalize(light->target - light->position);
-	
-	glUseProgram(shader->program);
 
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, glm::value_ptr(camera->view_matrix()));
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "proj"), 1, GL_FALSE, glm::value_ptr(camera->proj_matrix()));
-	glUniform3f(glGetUniformLocation(shader->program, "light_dir"), light_direction.x, light_direction.y, light_direction.z);
+	glUseProgram(shader->getHandle());
 
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "light_view"), 1, GL_FALSE, glm::value_ptr(light_view));
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "light_proj"), 1, GL_FALSE, glm::value_ptr(light_proj));
+	glUniformMatrix4fv(glGetUniformLocation(shader->getHandle(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view_matrix()));
+	glUniformMatrix4fv(glGetUniformLocation(shader->getHandle(), "proj"), 1, GL_FALSE, glm::value_ptr(camera->proj_matrix()));
+	glUniform3f(glGetUniformLocation(shader->getHandle(), "light_dir"), light_direction.x, light_direction.y, light_direction.z);
 
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "joints"), JOINT_NUM, GL_FALSE, (float *)joint_mesh_xform);
+	glUniformMatrix4fv(glGetUniformLocation(shader->getHandle(), "light_view"), 1, GL_FALSE, glm::value_ptr(light_view));
+	glUniformMatrix4fv(glGetUniformLocation(shader->getHandle(), "light_proj"), 1, GL_FALSE, glm::value_ptr(light_proj));
+
+	glUniformMatrix4fv(glGetUniformLocation(shader->getHandle(), "joints"), JOINT_NUM, GL_FALSE, (float *)joint_mesh_xform);
 
 	glActiveTexture(GL_TEXTURE0 + 0);
 	glBindTexture(GL_TEXTURE_2D, light->tex);
-	glUniform1i(glGetUniformLocation(shader->program, "shadows"), 0);
+	glUniform1i(glGetUniformLocation(shader->getHandle(), "shadows"), 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-	glEnableVertexAttribArray(glGetAttribLocation(shader->program, "vPosition"));
-	glEnableVertexAttribArray(glGetAttribLocation(shader->program, "vNormal"));
-	glEnableVertexAttribArray(glGetAttribLocation(shader->program, "vAO"));
-	glEnableVertexAttribArray(glGetAttribLocation(shader->program, "vWeightVal"));
-	glEnableVertexAttribArray(glGetAttribLocation(shader->program, "vWeightIds"));
+	glEnableVertexAttribArray(glGetAttribLocation(shader->getHandle(), "vPosition"));
+	glEnableVertexAttribArray(glGetAttribLocation(shader->getHandle(), "vNormal"));
+	glEnableVertexAttribArray(glGetAttribLocation(shader->getHandle(), "vAO"));
+	glEnableVertexAttribArray(glGetAttribLocation(shader->getHandle(), "vWeightVal"));
+	glEnableVertexAttribArray(glGetAttribLocation(shader->getHandle(), "vWeightIds"));
 
-	glVertexAttribPointer(glGetAttribLocation(shader->program, "vPosition"), 3, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 0));
-	glVertexAttribPointer(glGetAttribLocation(shader->program, "vNormal"), 3, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 3));
-	glVertexAttribPointer(glGetAttribLocation(shader->program, "vAO"), 1, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 6));
-	glVertexAttribPointer(glGetAttribLocation(shader->program, "vWeightVal"), 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 7));
-	glVertexAttribPointer(glGetAttribLocation(shader->program, "vWeightIds"), 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 11));
+	glVertexAttribPointer(glGetAttribLocation(shader->getHandle(), "vPosition"), 3, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 0));
+	glVertexAttribPointer(glGetAttribLocation(shader->getHandle(), "vNormal"), 3, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 3));
+	glVertexAttribPointer(glGetAttribLocation(shader->getHandle(), "vAO"), 1, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 6));
+	glVertexAttribPointer(glGetAttribLocation(shader->getHandle(), "vWeightVal"), 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 7));
+	glVertexAttribPointer(glGetAttribLocation(shader->getHandle(), "vWeightIds"), 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 11));
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tbo);
 	glDrawElements(GL_TRIANGLES, ntri, GL_UNSIGNED_INT, (void *)0);
 
-	glDisableVertexAttribArray(glGetAttribLocation(shader->program, "vPosition"));
-	glDisableVertexAttribArray(glGetAttribLocation(shader->program, "vNormal"));
-	glDisableVertexAttribArray(glGetAttribLocation(shader->program, "vAO"));
-	glDisableVertexAttribArray(glGetAttribLocation(shader->program, "vWeightVal"));
-	glDisableVertexAttribArray(glGetAttribLocation(shader->program, "vWeightIds"));
+	glDisableVertexAttribArray(glGetAttribLocation(shader->getHandle(), "vPosition"));
+	glDisableVertexAttribArray(glGetAttribLocation(shader->getHandle(), "vNormal"));
+	glDisableVertexAttribArray(glGetAttribLocation(shader->getHandle(), "vAO"));
+	glDisableVertexAttribArray(glGetAttribLocation(shader->getHandle(), "vWeightVal"));
+	glDisableVertexAttribArray(glGetAttribLocation(shader->getHandle(), "vWeightIds"));
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -98,60 +92,60 @@ void Character::draw(LightDirectional *light, CameraOrbit *camera) {
 	render_shadow(light, camera);
 }
 
-void Character::render_shadow(LightDirectional *light, CameraOrbit *camera) {
-	glm::mat4 light_view = glm::lookAt(camera->target + light->position, camera->target, glm::vec3(0,1,0));
-  	glm::mat4 light_proj = glm::ortho(-500.0f, 500.0f, -500.0f, 500.0f, 10.0f, 10000.0f);
+void Character::render_shadow(LightDirectional *light, CameraOrbit *camera)
+{
+	glm::mat4 light_view = glm::lookAt(camera->target + light->position, camera->target, glm::vec3(0, 1, 0));
+	glm::mat4 light_proj = glm::ortho(-500.0f, 500.0f, -500.0f, 500.0f, 10.0f, 10000.0f);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, light->fbo);
-	
+
 	glViewport(0, 0, 1024, 1024);
 
-	glClearDepth(1.0f);  
+	glClearDepth(1.0f);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	
+
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
-	
-	glUseProgram(shader_shadow->program);
-	
-	glUniformMatrix4fv(glGetUniformLocation(shader_shadow->program, "light_view"), 1, GL_FALSE, glm::value_ptr(light_view));
-	glUniformMatrix4fv(glGetUniformLocation(shader_shadow->program, "light_proj"), 1, GL_FALSE, glm::value_ptr(light_proj));
-	glUniformMatrix4fv(glGetUniformLocation(shader_shadow->program, "joints"), Character::JOINT_NUM, GL_FALSE, (float*)joint_mesh_xform);
+
+	glUseProgram(shader_shadow->getHandle());
+
+	glUniformMatrix4fv(glGetUniformLocation(shader_shadow->getHandle(), "light_view"), 1, GL_FALSE, glm::value_ptr(light_view));
+	glUniformMatrix4fv(glGetUniformLocation(shader_shadow->getHandle(), "light_proj"), 1, GL_FALSE, glm::value_ptr(light_proj));
+	glUniformMatrix4fv(glGetUniformLocation(shader_shadow->getHandle(), "joints"), Character::JOINT_NUM, GL_FALSE, (float *)joint_mesh_xform);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	
-	glEnableVertexAttribArray(glGetAttribLocation(shader_shadow->program, "vPosition"));  
-	glEnableVertexAttribArray(glGetAttribLocation(shader_shadow->program, "vWeightVal"));
-	glEnableVertexAttribArray(glGetAttribLocation(shader_shadow->program, "vWeightIds"));
 
-	glVertexAttribPointer(glGetAttribLocation(shader_shadow->program, "vPosition"),  3, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void*)(sizeof(float) *  0));
-	glVertexAttribPointer(glGetAttribLocation(shader_shadow->program, "vWeightVal"), 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void*)(sizeof(float) *  7));
-	glVertexAttribPointer(glGetAttribLocation(shader_shadow->program, "vWeightIds"), 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void*)(sizeof(float) * 11));
-	
+	glEnableVertexAttribArray(glGetAttribLocation(shader_shadow->getHandle(), "vPosition"));
+	glEnableVertexAttribArray(glGetAttribLocation(shader_shadow->getHandle(), "vWeightVal"));
+	glEnableVertexAttribArray(glGetAttribLocation(shader_shadow->getHandle(), "vWeightIds"));
+
+	glVertexAttribPointer(glGetAttribLocation(shader_shadow->getHandle(), "vPosition"), 3, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 0));
+	glVertexAttribPointer(glGetAttribLocation(shader_shadow->getHandle(), "vWeightVal"), 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 7));
+	glVertexAttribPointer(glGetAttribLocation(shader_shadow->getHandle(), "vWeightIds"), 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (void *)(sizeof(float) * 11));
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tbo);
-	glDrawElements(GL_TRIANGLES, ntri, GL_UNSIGNED_INT, (void*)0);
-	
-	glDisableVertexAttribArray(glGetAttribLocation(shader_shadow->program, "vPosition"));  
-	glDisableVertexAttribArray(glGetAttribLocation(shader_shadow->program, "vWeightVal"));
-	glDisableVertexAttribArray(glGetAttribLocation(shader_shadow->program, "vWeightIds"));
+	glDrawElements(GL_TRIANGLES, ntri, GL_UNSIGNED_INT, (void *)0);
+
+	glDisableVertexAttribArray(glGetAttribLocation(shader_shadow->getHandle(), "vPosition"));
+	glDisableVertexAttribArray(glGetAttribLocation(shader_shadow->getHandle(), "vWeightVal"));
+	glDisableVertexAttribArray(glGetAttribLocation(shader_shadow->getHandle(), "vWeightIds"));
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
+
 	glUseProgram(0);
-	
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glCullFace(GL_BACK);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
-	
+
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-
 
 glm::vec3 Character::getPosition()
 {
@@ -250,25 +244,25 @@ void Character::load(const char *filename_v, const char *filename_t, const char 
 
 void Character::update_move(glm::vec2 direction_velocity, glm::vec3 cam_direct, int vel, int strafe, bool is_crouched)
 {
-		
+
 	glm::vec3 trajectory_target_direction_new = glm::normalize(glm::vec3(cam_direct.x, 0.0, cam_direct.z));
 	glm::mat3 trajectory_target_rotation = glm::mat3(glm::rotate(atan2f(
-	trajectory_target_direction_new.x,
-	trajectory_target_direction_new.z), glm::vec3(0,1,0)));
+																	 trajectory_target_direction_new.x,
+																	 trajectory_target_direction_new.z),
+																 glm::vec3(0, 1, 0)));
 
 	float target_vel_speed = 2.5 + 2.5 * ((vel / 32768.0) + 1.0);
-	
-	glm::vec3 trajectory_target_velocity_new = target_vel_speed
-		* (trajectory_target_rotation * glm::vec3(direction_velocity.x / 32768.0, 0, direction_velocity.y / 32768.0));
+
+	glm::vec3 trajectory_target_velocity_new = target_vel_speed * (trajectory_target_rotation * glm::vec3(direction_velocity.x / 32768.0, 0, direction_velocity.y / 32768.0));
 	trajectory->target_vel = glm::mix(trajectory->target_vel, trajectory_target_velocity_new, EXTRA_VELOCITY_SMOOTH);
-	
+
 	strafe_target = ((strafe / 32768.0) + 1.0) / 2.0;
 	strafe_amount = glm::mix(strafe_amount, strafe_target, EXTRA_STRAFE_SMOOTH);
-	
+
 	glm::vec3 trajectory_target_velocity_dir = glm::length(trajectory->target_vel) < 1e-05 ? trajectory->target_dir : glm::normalize(trajectory->target_vel);
-	trajectory_target_direction_new = mix_directions(trajectory_target_velocity_dir, trajectory_target_direction_new, strafe_amount);  
-	trajectory->target_dir = mix_directions(trajectory->target_dir, trajectory_target_direction_new, EXTRA_DIRECTION_SMOOTH);  
-	
+	trajectory_target_direction_new = mix_directions(trajectory_target_velocity_dir, trajectory_target_direction_new, strafe_amount);
+	trajectory->target_dir = mix_directions(trajectory->target_dir, trajectory_target_direction_new, EXTRA_DIRECTION_SMOOTH);
+
 	crouched_target = is_crouched ? 1.0 : 0.0;
 
 	crouched_amount = glm::mix(crouched_amount, crouched_target, EXTRA_CROUCHED_SMOOTH);
@@ -282,7 +276,6 @@ void Character::update_move(glm::vec2 direction_velocity, glm::vec3 cam_direct, 
 	set_ik();
 
 	trajectory->post_update(&phase, areas);
-
 }
 
 void Character::build_local_transform()
@@ -384,20 +377,20 @@ void Character::rotate_hip_knee(glm::vec3 key_hl, glm::vec3 key_hr)
 	glm::vec3 heel_r = glm::vec3(joint_global_anim_xform[JOINT_HEEL_R][3]);
 
 	ik->two_joint(hip_l, knee_l, heel_l, key_hl, 1.0,
-					joint_global_anim_xform[JOINT_ROOT_L],
-					joint_global_anim_xform[JOINT_HIP_L],
-					joint_global_anim_xform[JOINT_HIP_L],
-					joint_global_anim_xform[JOINT_KNEE_L],
-					joint_anim_xform[JOINT_HIP_L],
-					joint_anim_xform[JOINT_KNEE_L]);
+				  joint_global_anim_xform[JOINT_ROOT_L],
+				  joint_global_anim_xform[JOINT_HIP_L],
+				  joint_global_anim_xform[JOINT_HIP_L],
+				  joint_global_anim_xform[JOINT_KNEE_L],
+				  joint_anim_xform[JOINT_HIP_L],
+				  joint_anim_xform[JOINT_KNEE_L]);
 
 	ik->two_joint(hip_r, knee_r, heel_r, key_hr, 1.0,
-					joint_global_anim_xform[JOINT_ROOT_R],
-					joint_global_anim_xform[JOINT_HIP_R],
-					joint_global_anim_xform[JOINT_HIP_R],
-					joint_global_anim_xform[JOINT_KNEE_R],
-					joint_anim_xform[JOINT_HIP_R],
-					joint_anim_xform[JOINT_KNEE_R]);
+				  joint_global_anim_xform[JOINT_ROOT_R],
+				  joint_global_anim_xform[JOINT_HIP_R],
+				  joint_global_anim_xform[JOINT_HIP_R],
+				  joint_global_anim_xform[JOINT_KNEE_R],
+				  joint_anim_xform[JOINT_HIP_R],
+				  joint_anim_xform[JOINT_KNEE_R]);
 
 	forward_kinematics();
 }
@@ -429,10 +422,10 @@ void Character::rotate_heel(glm::vec4 ik_weight, glm::vec3 key_tl, glm::vec3 key
 	joint_anim_xform[JOINT_HEEL_L] = mix_transforms(
 		joint_anim_xform[JOINT_HEEL_L],
 		glm::inverse(joint_global_anim_xform[JOINT_KNEE_L]) * glm::mat4(
-																	glm::vec4(targ_x_l, 0),
-																	glm::vec4(-targ_y_l, 0),
-																	glm::vec4(targ_z_l, 0),
-																	glm::vec4(heel_l, 1)),
+																  glm::vec4(targ_x_l, 0),
+																  glm::vec4(-targ_y_l, 0),
+																  glm::vec4(targ_z_l, 0),
+																  glm::vec4(heel_l, 1)),
 		ik_toe_pos_blend.y);
 
 	glm::vec3 heel_r = glm::vec3(joint_global_anim_xform[JOINT_HEEL_R][3]);
@@ -454,10 +447,10 @@ void Character::rotate_heel(glm::vec4 ik_weight, glm::vec3 key_tl, glm::vec3 key
 	joint_anim_xform[JOINT_HEEL_R] = mix_transforms(
 		joint_anim_xform[JOINT_HEEL_R],
 		glm::inverse(joint_global_anim_xform[JOINT_KNEE_R]) * glm::mat4(
-																	glm::vec4(-targ_x_r, 0),
-																	glm::vec4(targ_y_r, 0),
-																	glm::vec4(targ_z_r, 0),
-																	glm::vec4(heel_r, 1)),
+																  glm::vec4(-targ_x_r, 0),
+																  glm::vec4(targ_y_r, 0),
+																  glm::vec4(targ_z_r, 0),
+																  glm::vec4(heel_r, 1)),
 		ik_toe_pos_blend.w);
 
 	forward_kinematics();
@@ -490,10 +483,10 @@ void Character::rotate_toe(glm::vec4 ik_weight)
 	joint_anim_xform[JOINT_TOE_L] = mix_transforms(
 		joint_anim_xform[JOINT_TOE_L],
 		glm::inverse(joint_global_anim_xform[JOINT_HEEL_L]) * glm::mat4(
-																	glm::vec4(side_l, 0),
-																	glm::vec4(-upwr_l, 0),
-																	glm::vec4(fwrd_l, 0),
-																	glm::vec4(toe_l, 1)),
+																  glm::vec4(side_l, 0),
+																  glm::vec4(-upwr_l, 0),
+																  glm::vec4(fwrd_l, 0),
+																  glm::vec4(toe_l, 1)),
 		ik_toe_rot_blend.y);
 
 	glm::vec3 toe_r = glm::vec3(joint_global_anim_xform[JOINT_TOE_R][3]);
@@ -516,10 +509,10 @@ void Character::rotate_toe(glm::vec4 ik_weight)
 	joint_anim_xform[JOINT_TOE_R] = mix_transforms(
 		joint_anim_xform[JOINT_TOE_R],
 		glm::inverse(joint_global_anim_xform[JOINT_HEEL_R]) * glm::mat4(
-																	glm::vec4(side_r, 0),
-																	glm::vec4(-upwr_r, 0),
-																	glm::vec4(fwrd_r, 0),
-																	glm::vec4(toe_r, 1)),
+																  glm::vec4(side_r, 0),
+																  glm::vec4(-upwr_r, 0),
+																  glm::vec4(fwrd_r, 0),
+																  glm::vec4(toe_r, 1)),
 		ik_toe_rot_blend.w);
 
 	forward_kinematics();
